@@ -25,10 +25,10 @@ to retrieve information, either in the form of a token or through the
 use of a token, about the user from an identity provider. An identity
 provider may be Google, Github or an institution. Typically,
 institutions themselves do not implement OAuth2 interfaces, but do
-implement interfaces with SAML or Shibboleth. T
+implement interfaces with SAML or Shibboleth.
 
 OAuth2 specifies how you may ask for information about a user. It also
-specificies a method, through tokens, which a service may use to request
+specifies a method, through tokens, which a service may use to request
 and validate information about the user.
 
 With OAuth2, all tokens are transferred via the Authorization Header.
@@ -192,17 +192,17 @@ issuing a request to the DAX services.
 Notebook Aspect
 ---------------
 
-The Portal and the notebook should share some commmon session
-information about the user, including refresh tokens, to enable smooth
-transitions and interoperability between the two. How this is
-implemented is undefined.
+The Portal and the notebook should share some common session information
+about the user, including refresh tokens, to enable smooth transitions
+and interoperability between the two. How this is implemented is
+undefined.
 
 Once a user is logged in to the Notebook access, a user in the Notebook
 aspect can be viewed as a special case of Third Party access where we
 have some access to the user’s local environment, so we may be able to
 bootstrap an authentication mechanism on behalf of the user which
 ensures any necessary tokens are implicitly available in the user’s
-envioronment. For software developed by the LSST project, software which
+environment. For software developed by the LSST project, software which
 may use the DAX services, such as the Butler, we will ensure those
 applications can be automatically configured based on some form of
 information in the user’s Notebook environment. Other third party
