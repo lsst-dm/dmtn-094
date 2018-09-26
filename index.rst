@@ -1,8 +1,21 @@
 LSP Authentication
 ==================
 
+This document covers core technologies and interactions between
+services, APIs, and applications interacting with the LSST Science
+Platform as a whole.
+
 Core Technologies
 =================
+
+InCommon Federation
+-------------------
+
+InCommon is an identity federation in the United States that provides a
+common framework for identity management and trust across member
+institutions. The InCommon Federation’s identity management is built on
+top of eduPerson attributes, and the interfaces used to interact with
+the federated institutions are typically Shibboleth and SAML attributes.
 
 OAuth2
 ------
@@ -10,8 +23,9 @@ OAuth2
 OAuth2 is a framework that enables *users* to authorize *applications*
 to retrieve information, either in the form of a token or through the
 use of a token, about the user from an identity provider. An identity
-provider may be Google, Github or something else. CILogon functions as
-sort of a meta identity provider which implements the OAuth API.
+provider may be Google, Github or an institution. Typically,
+institutions themselves do not implement OAuth2 interfaces, but do
+implement interfaces with SAML or Shibboleth. T
 
 OAuth2 specifies how you may ask for information about a user. It also
 specificies a method, through tokens, which a service may use to request
@@ -29,8 +43,20 @@ may be used to authenticate a user using claims implemented in OAuth2.
 Dynamic Client Registration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Typically, an service, such as Firefly, operates as an OAuth client to a
+service which you may need access to. Due to implementation details of
+OAuth, you typically need a client ID and a client secret in order to
+register a client to receive information from the OAuth service (CILogon
+in our case). This works fine when the client is under full
+administrative control, like Firefly, but it falls apart if you want to
+deploy a client to a user device, such as a desktop or mobile phone. In
+those scenarios, you need to generate per-deployment client IDs and
+secrets.
+
+OAuth has a provision for that called Dynamic Client Registration.
+
 In the cases of TOPCAT, Astroquery, or PyVO - in the context of a user
-attached to an application, we think that CILogon would ideally support
+attached to an application, we think that CILogon may ideally support
 Dynamic Client Registration. This would allow TOPCAT to work similarly
 to a Mobile Application on a phone, for example.
 
@@ -49,25 +75,35 @@ CILogon
 -------
 
 CILogon is a generic authentication proxy/clearing house for
-authentication providers from multiple institutions and services
-(e.g. Github, Google, NCSA, Stanford). It serves as a common endpoint
-for the various providers and translates their authentication mechanisms
-to a common authentication mechanism, while also translating claims when
-possible. We use CILogon to transform authentication information and
-claims into OAauth-style claims through CILogon’s OpenID Connect
-interface. With this, we typically know what institution a user is from,
-their email address, and whether or not they are faculty, staff, or a
-student. We may use this information to also map them to an NCSA user,
-provided that information has been previously captured, and potentially
-retrieve additional claims about that user, *such as LDAP groups they
-are a member of.*
+authentication providers from multiple institutions and services,
+especially for institutions federated into the InCommon.org federation,
+as well as other services such as Github and Google. It serves as a
+common endpoint for these various identity providers and translates
+their authentication mechanisms (OAuth2, Shibboleth+SAML, OpenID
+Connect) mechanisms to a common authentication mechanism, while also
+translating claims, when possible.
+
+CILogon translates authentication information and user claims into
+OpenID Connect claims through the OpenID Connect interfaces. Using this,
+we typically know what institution a user is from, their email address,
+and whether or not they are faculty, staff, or a student. We may use
+this information to also map them to an NCSA user, provided that
+information has been previously captured, and potentially retrieve
+additional claims about that user, *such as LDAP groups they are a
+member of.* Should we want additional claims beyond the subject of a
+token - claims such as group membership or capabilities, we will need to
+deploy a server which we can present a refresh token to that will
+provide us with those additional claims. We do not expect this
+implementation-specific needs to be included in CILogon.
 
 SciTokens
 ---------
 
+**SciTokens is our expected implementation of access tokens.**
+
 SciTokens is an implementation of capabilities-based authorizations
-based on JWT claims, modeled as ``read`` and ``write``, on top of a very
-simple JWT token.
+based on JWT claims, modeled as ``read`` and ``write`` capabilities, on
+named resources. These are implemented in a JWT token.
 
 It’s expected that we will use some form of login flow from CILogon to
 eventually translate claims about a user and add them to a SciTokens
@@ -75,24 +111,33 @@ token. It’s expected that there will be a service where a user would
 present tokens acquired from CILogon to the SciTokens service to acquire
 a refresh token and an access token, with a very limited lifetime, from
 a SciTokens service. The refresh token may be used to acquire new access
-tokens to present to services which will accept them. **This implies
-that services or applications which frequently may need to operate on
-behalf of a user for longer than the lifetime of an access token must
-acquire a refresh token**.
+tokens to present to services which will accept them. Services or
+applications which frequently may need to operate on behalf of a user
+for longer than the lifetime of an access token must acquire a refresh
+token, which they can use to acquire access tokens.
+
+When a SciToken is passed to a service, it is always passed according to
+the OAuth standard for passing Bearer tokens. This means it’s passed in
+the Authorization header, in the form of:
+
+::
+
+   Authorization: Bearer [TOKEN]
 
 Token lifetimes
 ===============
 
 Access token lifetimes are expected to be from 1 to 24 hours. An exact
-number is not available.
-
-Refresh tokens effectively never expire. They can be used to acquire new
-Access tokens.
+number is not available. The SciTokens team recommends token lifetimes
+in the tens of minutes, but this seems untenable, especially in the case
+where a user may want to execute a job in a batch system in the grid or
+a HPC system, where queues are typically several hours long.
 
 Token Claims
 ============
 
-A SciToken will only have an NCSA user ID in the claim by default.
+An Access Token will only have an NCSA user ID in the ``sub`` claim by
+default.
 
 In some cases, a SciToken MAY come with read and write claims. In
 accordance with the principle of lease-privilege, SciTokens also allows
@@ -121,12 +166,19 @@ registered as OpenID Connect clients to CILogon.
 Portal Aspect (Firefly)
 -----------------------
 
-When a user first logs into the portal, they will be redirected to
-CILogon. They may select either NCSA as their Identity Provider or their
-home institution. CILogon executes the login, ultimately returning
+When a user first logs into the portal, they will be redirected to the
+token server. They may select either NCSA as their Identity Provider or
+their home institution. CILogon executes the login, ultimately returning
 information about who the user is at NCSA to the portal aspect through
 CILogon’s OpenID Connect interface. This providers the Portal aspect
 with an access token and a refresh token.
+
+In OAuth2, the SciToken is an access token. A service like Firefly is an
+OAuth2 client and will also receive a refresh token (allowing it to
+generate additional SciTokens, since the access token is relatively
+short-lived). When calls are made to DAX, the SciToken (an access token)
+is used as a HTTP Bearer token (e.g.,
+``Authorization: Bearer [TOKEN]``).
 
 Portal to DAX
 -------------
@@ -172,16 +224,28 @@ Applications calling into DAX services are responsible for ensuring an
 access token is valid and hasn’t expired before calling into a DAX
 service.
 
-If the DAX service must call another service within the DAC, such as
-stashing the results of a long-running TAP query in a user’s workspace
-after the expiration of an access token, we will allow the DAX services
-to perform that operation by trusting them.
+The Access token received by DAX can, in turn, be forwarded to other
+SciToken-aware resources. If Qserv can accept SciTokens directly, this
+can be done. Otherwise, if the DAX service must call another service
+within the DAC, such as stashing the results of a long-running TAP query
+in a user’s workspace after the expiration of an access token, we will
+allow the DAX services to perform that operation by through trust of the
+DAX services. This may prove complicated in the case of requests that
+span multiple LSP instances or DACs. Should that become complicated, it
+may be required for the DAX services to issue a new token which can be
+honored at different sites.
 
-VOSpace/WebDAV/FTS3
-~~~~~~~~~~~~~~~~~~~
+VOSpace/WebDAV
+~~~~~~~~~~~~~~
 
 In general, users must use access tokens to interoperate with these
-services.
+services. We anticipate VOSpace may possibly be implemented over FTS3.
+
+Due to the management of file transfers in a service like FTS3 being
+potentially managed in a batch-like system, we may need access tokens to
+live for 24 hours or more. It may also be necessary to have a mechanism
+to force acquisition of a new access token before a file transfer
+request is submitted.
 
 Third Party
 -----------
@@ -206,9 +270,8 @@ TOPCAT
 ~~~~~~
 
 We will work closely with TOPCAT developers to find an optimal solution.
-TOPCAT may be a special case, and may be ideally treated similarly to
-a mobile application. In that case, we may need Dynamic Client 
-Registration supported in CILogon.
+It’s possible that TOPCAT is ideally modeled as mobile application which
+acquires a refresh token and manages the access token locally.
 
 .. _astroquerypyvo-1:
 
