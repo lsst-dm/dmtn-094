@@ -78,7 +78,7 @@ The IAM system SHOULD disallow group names that are not representable as UNIX gr
 database role names within the Data Management System. This implies a 32 character limit, as limited
 by Red Hat Linux.
 
-   Before Oracle 12.2, there's a limit of 30 characters on role names.
+   Note: Before Oracle 12.2, there's a limit of 30 characters on role names.
 
 All users MUST be a member and the only member of a user-private group. The group name should be the
 name of the user. This follows the Red Hat feature called `User Private
@@ -185,8 +185,8 @@ After a successful federated authentication from the associated account, the CIL
 produce the equivalent authentication information to that of a successful authentication of an LSST
 account.
 
-Authorization
--------------
+Authorization Methods
+---------------------
 
 Authorization in LSST helps determine what acts a user may perform in a given system.
 
@@ -242,8 +242,6 @@ For the issuance of the capabilities, the following are required:
    certificate); or
 -  A system that is notified notified by another system implementing the method;
 
-.. _authorization-1:
-
 Authorization
 ^^^^^^^^^^^^^
 
@@ -262,10 +260,10 @@ To process a request with a capabilities message, a service MUST:
    represented in the message.
 
 For the LSP, we have not finished defining the resources of the message, though we expect those
-resources correspond loosely to services; we expect operations will be either ``read`` or ``write``
-in the context of LSP; and we expect a service will largely perform control accesss to that service,
-and, transitively, the data served by that service. The resources, operations, and services
-currently identified are in the `data and service
+resources will correspond roughly to services; we expect operations will be either ``read``,
+``write``, or ``execute`` in the context of LSP; and we expect a service will largely control
+accesss to itself, and, transitively, the data served by that service. The resources, operations,
+and services currently identified are in the `data and service
 classifications <#data-and-service-classifications>`__ section below.
 
 Data and Service Classifications
@@ -310,12 +308,246 @@ being performed to clarify the classifications of data and services together.
 | (User/Shared)          |                        |                        | POSIX, Notebook (via   |
 |                        |                        |                        | POSIX)                 |
 +------------------------+------------------------+------------------------+------------------------+
+| Portal                 | execute                | high                   | Portal                 |
++------------------------+------------------------+------------------------+------------------------+
+| Notebook               | execute                | high                   | Notebook               |
++------------------------+------------------------+------------------------+------------------------+
 
-Technologies
-============
+Tokens
+======
 
-This section will cover some technologies used by both the IAM system and the LSP system to meet the
-goals of the LSP system.
+Broadly speaking, there are two main types of tokens in the LSST DM system. Tokens whose primary use
+are for identity, which are issued from CILogon, and tokens whose primary use are for checking
+capabilities. Identity tokens are roughly equivalent to X.509 certificates; they include information
+about the user identity, including the username for the LSST account and/or the UNIX UID, and group
+memberships, in addition to a crytpographic signature for verifying the token integrity using public
+key encryption.
+
+Capability tokens, in the LSST DM system, will minimally also include the UNIX UID and/or username
+for the LSST account, as well as a list of capabilities for the token.
+
+Due to the additional infrastructure and definitions required for impelementing capabilities-based
+authorization, we intend to implement authentication and authorization in the LSST DM system in two
+phases.
+
+Phased Approach to Authorization
+--------------------------------
+
+Phase 1 is authorization through identity. LSP services will rely on identity from identity tokens,
+including UID and group membership, to authorize access to services; services, notably the LSP API
+aspect, will implement impersonation in some form to delegate authorization to the underlying
+systems.
+
+Phase 2 is the implementation of authorization first through capabilities at the service level;
+followed by the same identity-based authorization techniques from Phase 1.
+
+Identity tokens - OpenID Connect
+--------------------------------
+
+All identity tokens are OpenID Connect tokens. All OpenID connect tokens are `JWT <#jwt>`__ tokens.
+They are issued from `CILogon <#cilogon>`__ in the exchange. In `Phase
+1 <#phased-approach-to-authorization>`__ of our authentication system, we will pass around the
+OpenID connect tokens until the `token issuer <#token-issuer>`__ is set up as part of `phase
+2 <#phased-approach-to-authorization>`__.
+
+   See Also: `OpenID Connect Core Specification for ID
+   Token <https://openid.net/specs/openid-connect-core-1_0.html#IDToken>`__
+
+Claims
+~~~~~~
+
+Minimally, the identity tokens issued by CILogon MUST include the following claims.
+
+``uidNumber`` - The LSST UNIX UID. ``isMemberOf`` - A list of JSON Objects with the objects composed
+of a ``name`` key corresponding to UNIX group names; and ``id`` key corresponding to the UNIX GID
+for the group name.
+
+Capability tokens - SciTokens
+-----------------------------
+
+All capability tokens are based on `SciTokens <#scitokens>`__.
+
+.. _claims-1:
+
+Claims
+~~~~~~
+
+Minimally, the Capabilities tokens issued by the `token issuer <#token-issuer>`__ MUST include the
+following claims:
+
+``sub`` - The LSST User UNIX ID. Normally, SciTokens recommends against using this field for
+identification purposes. ``scope`` - This is a list of space-separated capabilities. Capabilities
+are derived from `the data and service classifications <#data-and-service-classifications>`__. This
+is similar to how GitHub allows scopes.
+
+.. _tokens-vs-x509:
+
+Tokens vs. X.509
+----------------
+
+Fundamentally, identity tokens are roughly equivalent to X.509 certificates, though there are
+several advantages.
+
+X.509 certificates are handled in Layer 4 in the OSI model, which typically leads to a more
+complicated setup of servers, clients, and applications.
+
+OAuth tokens are handled in Layer 7 of the OSI model, which adds flexibilty to configuration.
+
+OAuth tokens can include additional claims that are useful for application developers.
+
+Capabilties-based tokens allow issuance of tokens scoped accordingly to the services that a given
+application may require. A user may select only the capabilties needed for given use case, limiting
+access to sensitive information, such as `query history <#data-and-service-classifications>`__. This
+is most important in lower trust environments, such as grid computing or shared university clusters.
+
+Components
+==========
+
+Clients
+-------
+
+Portal
+~~~~~~
+
+When a user first logs into the portal, they will be redirected to the token issuer. They may select
+either NCSA as their Identity Provider or their home institution. CILogon executes the login,
+ultimately returning information about who the user is at NCSA to the portal aspect through
+CILogon's OpenID Connect interface and the token's ``sub`` claim. This provides the Portal aspect
+with an access token and a refresh token.
+
+Firefly is an OAuth 2.0 client and SHOULD use the refresh token to generate new access tokens. When
+calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token in the HTTP
+``Authorization`` header, according to the OAuth 2.0 Specification:
+
+   ``Authorization: Bearer [TOKEN]``
+
+Notebook
+~~~~~~~~
+
+The Portal and the notebook should share some common session information about the user, including
+refresh tokens, to enable smooth transitions and interoperability between the two. How this is
+implemented is undefined.
+
+Once a user is logged in to the Notebook access, a user in the Notebook aspect can be viewed as a
+special case of `data access libraries <#data-access-libraries>`__, where we have some access to the
+user's local environment, so we may be able to bootstrap an authentication mechanism on behalf of
+the user which ensures any necessary tokens are implicitly available in the user's environment. For
+software developed by the LSST that may utilize the DAX services, such as the Butler, we will ensure
+those applications can be automatically configured based on some form of information in the user's
+Notebook environment. Other third party software MAY be automatically configured, or they should be
+configurable in the same way as if a user was running on their local machine and not in an LSP
+instance.
+
+TOPCAT
+~~~~~~
+
+LSST will be working with the TOPCAT developer to find the best method of authentication. It's
+expected that the embedded HTTP basic method will work to start.
+
+Data access libraries
+~~~~~~~~~~~~~~~~~~~~~
+
+We are targeting Astroquery an PyVO as primary libraries to be used within the Notebook environment.
+PyVO doesn't currently implement any form of authentication; it's expected that an identity token or
+capabilities token may be passed in the URL with the HTTP Basic Auth scheme.
+
+LSST SHOULD implement a token manager for Astroquery.
+
+Data Services
+-------------
+
+   TODO: Not sure what to say here that's not already said somewhere else
+
+TAP
+~~~
+
+SIA
+~~~
+
+Token Manager
+-------------
+
+For phase 1, it's desirable for clients to autoconfigure, if possible, based on the identity token.
+
+   TODO: How do we get an ID token for Phase 1?
+
+In Phase 2, it's desirable to limit the lifetime of the capabilties-based access tokens so that
+controls may be implemented at the `token issuer <#token-issuer>`__ to respond in a timely manner to
+changing conditions. In order to achieve that, the portal aspect is expected to implement a token
+manager which manages the lifecycle of the capabilities token using the refresh token received from
+the `token issuer <#token-issuer>`__, as well as the token issuer.
+
+Token Issuer
+------------
+
+The token issuer is fundamentally a part of the IAM system. The token issuer's primary purpose is to
+issue tokens with appropriate capabilities, based on a combination of information from LDAP, and
+user-selected scopes.
+
+The token issuer is not needed for Phase 1.
+
+In Phase 2, the token issuer will be presented with an identity token by a service, either the
+portal or some third-party application or library, and MUST issue a refresh token. The refresh token
+can be presented at any time to the token issuer for a capabilities token.
+
+   TODO: Service provided by data publisher Uses identity/refresh token to issue refresh/access
+   token For our purposes, has a fixed list of scopes plus scopes derived from LDAP groups (no
+   actual separate policy database needed) Limits scope to what client and user request/allow
+
+Token Authorizer
+----------------
+
+All LSP services are responsible for validating tokens. For Phase 1, the portal and notebook are
+responsible for inspecting the token for any groups of interest, or delegating to a service, to
+control access to the service. The LSP API aspect is responsible for verifying the token received,
+as well as also inspecting the token for any groups of interest. Services in the LSP API aspect are
+also responsible for impersonation for the underlying systems.
+
+In Phase 2, services in the LSP API aspect will rely on capabilities in the ``scope`` claim of the
+capabilities token to limit access to the requisite service. It will then rely on impersonation for
+finer-grained authorization.
+
+Token Proxy
+-----------
+
+The LSP API Aspect MUST be able to make requests to other services. This requires relaying the
+appropriate tokens to the services. In order to satisfy a `token acceptance
+guarantee <#token-acceptance-guarantee>`__, in the context of asychronous and long-running requests,
+the LSP API Aspect MUST obtain, either through self-issuance or a request to the `token
+issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other DAX
+services.
+
+The reissued token MAY alter the values of the following ``iss``, ``exp``, and ``iat`` claims. All
+other claims MUST be included in the reissued token, unmodified.
+
+Due to likely dependencies on a `token issuer <#token-issuer>`__, the token proxy will be delayed
+until Phase 2.
+
+#Sequence Diagrams
+
+   TODO: Pull in new sequence diagrams
+
+Phase 1
+-------
+
+Phase 2
+-------
+
+Interfaces
+==========
+
+Client Token Manager to Token Issuer
+------------------------------------
+
+   TODO: I think this is already implemented in Portal and Notebook
+
+Client Token Manager to Data Service Token Authorizer
+-----------------------------------------------------
+
+   TODO: Not sure if this is the same as `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
+
+Appendix
+========
 
 -  `InCommon <#incommon-federation>`__ and eduPerson to verify attributesabout scientists, when
    possible;
@@ -323,6 +555,7 @@ goals of the LSP system.
    users in the form of *claims*.
 -  `OAuth 2.0 <#oauth-2.0>`__ as the generic protocol to interface with CILogon. OpenID Connect is
    layered over the OAuth 2.0 protocol to required for an authentication implementation.
+-  `OpenID Connect <#openid-connect>`__ as the simple authentication layer on top of OAuth 2.0.
 -  `JWT <#jwt>`__ as the implementation for identity tokens. This is also required as a result of
    using OpenID Connect.
 
@@ -378,31 +611,14 @@ compatiblity may be possible by manually constructing the URL with the token in 
 
 ..
 
-   Note: Care should be taken to always make the URL https.
+   Note: Care should be taken to always make the URL https, so tokens aren't passed incorrectly.
 
-OpenID Connect - Identity Tokens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OpenID Connect
+--------------
 
 OpenID Connect is an simple authentication layer on top of OAuth2. OpenID Connect specifies a small
 set of information about a user which may be used to authenticate a user using claims implemented
-according to the OAuth2 specification.
-
-OpenID Connect Dynamic Client Registration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Typically, a service, such as Firefly, operates as an OAuth2 client to a service - the resource
-server. Due to implementation details of OAuth, you typically need a client ID and a client secret
-in order to register a client to receive information from the OAuth service (CILogon in our case).
-This works fine when the client is under full administrative control, like Firefly, but it falls
-apart if you want to deploy a client to a user-controlled device, such as a desktop or mobile phone.
-In those scenarios, you should generate per-deployment client IDs and secrets.
-
-OAuth has a provision for that called Dynamic Client Registration.
-
-In the cases of TOPCAT, Astroquery, or PyVO - it may be beneficial to model either an application
-(TOPCAT) or the device itself as a client, should CILogon to support Dynamic Client Registration.
-This would allow TOPCAT or any application on the system to work similarly to a Mobile Application
-on a phone.
+according to the OAuth 2.0 specification.
 
 CILogon
 -------
@@ -461,45 +677,8 @@ a file path (e.g. ``read:/datasets/catalogs``) or a more general resource (e.g.
 SciTokens recommends not using the subject (``sub`` claim) for identity purposes. This implies that
 SciTokens should not be used for authorizations based on identity.
 
-It's expected that we will use some form of login flow from CILogon to eventually translate claims a
-client may have to a SciTokens token. It's expected that there will be a service where a user would
-present tokens acquired from CILogon to the SciTokens service to acquire a refresh token and an
-access token, with a very limited lifetime, from a SciTokens service. The refresh token may be used
-to acquire new access tokens to present to services which will accept them. Services or applications
-which frequently may need to operate on behalf of a user for longer than the lifetime of an access
-token must acquire a refresh token, which they can use to acquire access tokens.
-
-SciTokenss MUST be passed using one of the allowable methods defined for `passing OAuth 2.0
+SciTokens MUST be passed using one of the allowable methods defined for `passing OAuth 2.0
 Tokens <#passing-oauth-2.0-tokens>`__.
-
-Token lifetimes
-===============
-
-Access token lifetimes are expected to be short, typically on the order of several hours or less,
-but may last as long as 24 hours, depending on the issuer and use case. An exact number is not
-available.
-
-Refresh tokens, which are used to acquire access tokens in the OAuth 2.0 protocol, can last longer.
-It's expected a refresh token will last at least 24 hours and may last as long as a week. In some
-limited use cases, they may last longer.
-
-DAX services intend to guarantee all requests received that a DAX services recieved will succeed. To
-work with shorter access token lifetimes, the succeed. In order to guarantee this, the DAX services
-MUST issue a new token with the same claims which ONLY other DAX services will be configured to
-honor. The lifetime of this token is not specified, but it should the upper bound for the limit of
-time it takes to service a request, around 24 hours.
-
-DAX services SHOULD NOT issue new tokens from requests with DAX-issued tokens.
-
-Token Claims
-============
-
-Access tokens used for identity-based authorizations, issued from the appropriate token issuers,
-MUST have the UID, user name, or fully qualified user name (email address) in the ``sub`` claim of
-an access token. This will allow a service to identify the `user <#user>`__.
-
-SciTokens Token Claims
-----------------------
 
 A SciToken MUST come with a ``scope`` claim. The ``scope`` claim is a space-seperated list of
 capabilities. This is defined in `RFC6749 <https://tools.ietf.org/html/rfc6749#section-3.3>`__.
@@ -510,115 +689,24 @@ existing token for attenuated one. This may be especially useful with Grid compu
 It's important to consider the lifetime of a token in these scenarios to determine what token may be
 required.
 
-Interactions
-============
-
-All of the following interactions have an assumption that a user is registered and is already a
-member of requisite LDAP groups for accessing LSST resources within NCSA.
-
-All of the following interactions als assume that a user using federated authentication has also
-associated their account from a third parting Identity Provider to their account at NCSA, and that
-CILogon is able to perform that association and return information about who the user is at NCSA.
-
-It is also assumed that the Portal and Notebook applications have registered as OpenID Connect
-clients to CILogon.
-
-Portal Aspect (Firefly)
------------------------
-
-When a user first logs into the portal, they will be redirected to the token issuer. They may select
-either NCSA as their Identity Provider or their home institution. CILogon executes the login,
-ultimately returning information about who the user is at NCSA to the portal aspect through
-CILogon's OpenID Connect interface and the token's ``sub`` claim. This provides the Portal aspect
-with an access token and a refresh token.
-
-Firefly is an OAuth 2.0 client and SHOULD use the refresh token to generate new access tokens. When
-calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token in the HTTP
-``Authorization`` header, according to the OAuth 2.0 Specification:
-
-   ``Authorization: Bearer [TOKEN]``
-
-Portal to DAX
--------------
-
-The Portal will send the access token to a DAX service. The Portal SHOULD configure an HTTP client
-with an authentication filter that can check the expiration of the access token, and, if necessary,
-use the refresh token to acquire a new access token from the token issuer before issuing a request
-to the DAX services.
-
-Notebook Aspect
+Token lifetimes
 ---------------
 
-The Portal and the notebook should share some common session information about the user, including
-refresh tokens, to enable smooth transitions and interoperability between the two. How this is
-implemented is undefined.
+Access token lifetimes are expected to be short, typically on the order of several hours or less,
+but may last as long as 24 hours, depending on the issuer and use case. An exact number is not
+available.
 
-Once a user is logged in to the Notebook access, a user in the Notebook aspect can be viewed as a
-special case of Third Party access where we have some access to the user's local environment, so we
-may be able to bootstrap an authentication mechanism on behalf of the user which ensures any
-necessary tokens are implicitly available in the user's environment. For software developed by the
-LSST that may utilize the DAX services, such as the Butler, we will ensure those applications can be
-automatically configured based on some form of information in the user's Notebook environment. Other
-third party software MAY be automatically configured, or they should be configurable in the same way
-as if a user was running on their local machine and not in an LSP instance.
+Refresh tokens, which are used to acquire access tokens in the OAuth 2.0 protocol, can last longer.
+It's expected a refresh token will last at least 24 hours and may last as long as a week. In some
+limited use cases, they may last longer.
 
-Astroquery/PyVO
-~~~~~~~~~~~~~~~
+Token Acceptance Guarantee
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We are targeting Astroquery an PyVO as primary libraries to be used within the Notebook environment.
+DAX API services intend to guarantee all requests received that a DAX services recieved will
+succeed. To work with shorter access token lifetimes, the succeed. In order to guarantee this, the
+DAX services MUST issue a new token with the same claims which ONLY other DAX services will be
+configured to honor. The lifetime of this token is not specified, but it should the upper bound for
+the limit of time it takes to service a request, around 24 hours.
 
-DAX
----
-
-Authentication to DAX services is performed by using access tokens only. Applications calling into
-DAX services are responsible for ensuring an access token is valid and hasn't expired before calling
-into a DAX service.
-
-A DAX service SHOULD reissue a new token if the service needs to issue a request to another DAX
-service, as laid out in the `token lifetimes <#token-lifetimes>`__ section. If Qserv can accept
-tokens directly, the token SHOULD be passed as the username.
-
-We expect a PAM module to be a product of the IAM system which can accept an access token and login
-a user.
-
-VOSpace/WebDAV
-~~~~~~~~~~~~~~
-
-In general, users must use access tokens to interoperate with these services. We anticipate VOSpace
-may possibly be implemented over FTS3.
-
-Due to the management of file transfers in a service like FTS3 being potentially managed in a
-batch-like system, we may need access tokens to live for 24 hours or more. It may also be necessary
-to have a mechanism to force acquisition of a new access token before a file transfer request is
-submitted.
-
-Third Party
------------
-
-We expect there to be an explicit flow a user must engage in for all third party authentication.
-It's not clear if a user of third-party applications will share a common token (e.g. Refresh Token)
-or if a user will need to explicitly retrieve tokens for all third party services. At least in the
-case of TOPCAT, we are incentivized to make the process as easy as possible, and we will work with
-the TOPCAT developer closely to develop an optimal solution.
-
-In the case of X.509 certifications, for applications such as GSI-SSH, a certificate is typically
-written out to a well-defined location in the system's temporary disk space (e.g.
-``/tmp/x509up_u${UID}``), ``.globus`` for Windows users) for reuse by all GSI-enabled applications.
-A similar convention would need to be constructed to allow multiple third party applications to
-share a common set of credential, or we can stash a token in an environment variable.
-
-TOPCAT
-~~~~~~
-
-We will work closely with TOPCAT developers to find an optimal solution. It's possible that TOPCAT
-is ideally modeled as mobile application which acquires a refresh token and manages the access token
-locally.
-
-.. _astroquerypyvo-1:
-
-Astroquery/PyVO
-~~~~~~~~~~~~~~~
-
-In the case of Astroquery, PyVO, or other third party applications, we expect a user to either
-explicitly log-in or acquire a token from an LSST token UI and programmatically configure their
-clients.
+DAX services SHOULD NOT issue new tokens from requests with DAX-issued tokens.
