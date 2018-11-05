@@ -538,6 +538,12 @@ the LSP API Aspect MUST obtain, either through self-issuance or a request to the
 issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other LSP
 API aspect services.
 
+.. note:: `Safe HTTP methods
+          <https://tools.ietf.org/html/rfc7231#section-4.2.1>`__,
+          such as `HEAD` and `GET` requests SHOULD NOT need
+          reissuance, as they SHOULD NOT take any other action other
+	  than simple retrieval.
+
 The reissued token MAY alter the values of the following ``iss``, ``exp``, and ``iat`` claims. All
 other claims MUST be included in the reissued token, unmodified.
 
