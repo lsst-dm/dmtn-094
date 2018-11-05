@@ -372,7 +372,7 @@ All capability tokens are based on `SciTokens <#scitokens>`__.
 Claims
 ~~~~~~
 
-Minimally, the Capabilities tokens issued by the `token issuer <#token-issuer>`__ MUST include the
+Minimally, the capability token issued by the `token issuer <#token-issuer>`__ MUST include the
 following claims:
 
 ``sub`` - The LSST User UNIX ID. Normally, SciTokens recommends against using this field for
@@ -421,10 +421,14 @@ calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token i
 
    ``Authorization: Bearer [TOKEN]``
 
+..
+
+   See Also: `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
+
 Notebook
 ~~~~~~~~
 
-The Portal and the notebook should share some common session information about the user, including
+The Portal and the notebook MAY share some common session information about the user, including
 refresh tokens, to enable smooth transitions and interoperability between the two. How this is
 implemented is undefined.
 
@@ -432,26 +436,33 @@ Once a user is logged in to the Notebook access, a user in the Notebook aspect c
 special case of `data access libraries <#data-access-libraries>`__, where we have some access to the
 user's local environment, so we may be able to bootstrap an authentication mechanism on behalf of
 the user which ensures any necessary tokens are implicitly available in the user's environment. For
-software developed by the LSST that may utilize the DAX services, such as the Butler, we will ensure
-those applications can be automatically configured based on some form of information in the user's
-Notebook environment. Other third party software MAY be automatically configured, or they should be
-configurable in the same way as if a user was running on their local machine and not in an LSP
-instance.
+software developed by the LSST that may utilize the LSP API aspect services, such as the Butler, we
+will ensure those applications can be automatically configured based on some form of information in
+the user's Notebook environment. Other third party software MAY be automatically configured, or they
+should be configurable in the same way as if a user was running on their local machine and not in an
+LSP instance.
 
 TOPCAT
 ~~~~~~
 
-LSST will be working with the TOPCAT developer to find the best method of authentication. It's
-expected that the embedded HTTP basic method will work to start.
+LSST will be working with the TOPCAT developers to find the best method of authentication. It's
+expected that the embedded HTTP basic method will work to start. A slightly modified workflow from
+phase 1 for an `application with identity token <#application-with-identity-tokens>`__ or phase 2
+for for an `application with a capability token <#application-with-capability-tokens>`__ is
+expected.
 
 Data access libraries
 ~~~~~~~~~~~~~~~~~~~~~
 
 We are targeting Astroquery an PyVO as primary libraries to be used within the Notebook environment.
 PyVO doesn't currently implement any form of authentication; it's expected that an identity token or
-capabilities token may be passed in the URL with the HTTP Basic Auth scheme.
+capability token may be passed in the URL with the HTTP Basic Auth scheme.
 
-LSST SHOULD implement a token manager for Astroquery.
+Within the Notebook aspect, tokens MUST be available, either in an well-defined environment
+variables or as a file in a locations.
+
+LSST SHOULD implement a token manager for Astroquery. For the notebook aspect, a method for
+initializing the token manager according the the stored token SHOULD be implemented.
 
 Data Services
 -------------
@@ -469,13 +480,15 @@ Token Manager
 
 For phase 1, it's desirable for clients to autoconfigure, if possible, based on the identity token.
 
-   TODO: How do we get an ID token for Phase 1?
+   TODO: How do we get an ID token for Phase 1 for Applications?
 
 In Phase 2, it's desirable to limit the lifetime of the capabilties-based access tokens so that
 controls may be implemented at the `token issuer <#token-issuer>`__ to respond in a timely manner to
 changing conditions. In order to achieve that, the portal aspect is expected to implement a token
-manager which manages the lifecycle of the capabilities token using the refresh token received from
+manager which manages the lifecycle of the capability token using the refresh token received from
 the `token issuer <#token-issuer>`__, as well as the token issuer.
+
+   TODO: How do we get capability tokens for Phase 2 for Applications?
 
 Token Issuer
 ------------
@@ -488,7 +501,7 @@ The token issuer is not needed for Phase 1.
 
 In Phase 2, the token issuer will be presented with an identity token by a service, either the
 portal or some third-party application or library, and MUST issue a refresh token. The refresh token
-can be presented at any time to the token issuer for a capabilities token.
+can be presented at any time to the token issuer for a capability token.
 
    TODO: Service provided by data publisher Uses identity/refresh token to issue refresh/access
    token For our purposes, has a fixed list of scopes plus scopes derived from LDAP groups (no
@@ -504,7 +517,7 @@ as well as also inspecting the token for any groups of interest. Services in the
 also responsible for impersonation for the underlying systems.
 
 In Phase 2, services in the LSP API aspect will rely on capabilities in the ``scope`` claim of the
-capabilities token to limit access to the requisite service. It will then rely on impersonation for
+capability token to limit access to the requisite service. It will then rely on impersonation for
 finer-grained authorization.
 
 Token Proxy
@@ -514,8 +527,8 @@ The LSP API Aspect MUST be able to make requests to other services. This require
 appropriate tokens to the services. In order to satisfy a `token acceptance
 guarantee <#token-acceptance-guarantee>`__, in the context of asychronous and long-running requests,
 the LSP API Aspect MUST obtain, either through self-issuance or a request to the `token
-issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other DAX
-services.
+issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other LSP
+API aspect services.
 
 The reissued token MAY alter the values of the following ``iss``, ``exp``, and ``iat`` claims. All
 other claims MUST be included in the reissued token, unmodified.
@@ -523,15 +536,47 @@ other claims MUST be included in the reissued token, unmodified.
 Due to likely dependencies on a `token issuer <#token-issuer>`__, the token proxy will be delayed
 until Phase 2.
 
-#Sequence Diagrams
+Sequence Diagrams
+=================
 
-   TODO: Pull in new sequence diagrams
+Phase 1 - Identity Tokens
+-------------------------
 
-Phase 1
--------
+Notebook with Identity Tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Phase 2
--------
+.. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_OpenID_Connect.png
+
+Portal with Identity Tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/Authentication_for_Portal_with_data_request_using_CILogon_and_OpenID_Connect.png
+
+Application with Identity Tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
+
+Phase 2 - Capability Tokens
+---------------------------
+
+Notebook with Capability Token
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_and_Capability_token.png
+
+Portal with Capability Token
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/Authentication_to_Portal_with_data_request_using_capability_token.png
+
+Application with Capability Token
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   TODO: Not clear how a user, in conjunction with the application, specifies the capabilties they
+   need.
+
+.. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
 
 Interfaces
 ==========
@@ -703,10 +748,10 @@ limited use cases, they may last longer.
 Token Acceptance Guarantee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DAX API services intend to guarantee all requests received that a DAX services recieved will
-succeed. To work with shorter access token lifetimes, the succeed. In order to guarantee this, the
-DAX services MUST issue a new token with the same claims which ONLY other DAX services will be
-configured to honor. The lifetime of this token is not specified, but it should the upper bound for
-the limit of time it takes to service a request, around 24 hours.
+The LSP API aspect services intend to guarantee all requests received that a given API service
+recieved will succeed. To work with shorter access token lifetimes, the succeed. In order to
+guarantee this, the API services MUST issue a new token with the same claims which ONLY other API
+services will be configured to honor. The lifetime of this token is not specified, but it should the
+upper bound for the limit of time it takes to service a request, around 24 hours.
 
-DAX services SHOULD NOT issue new tokens from requests with DAX-issued tokens.
+The LSP API aspect services SHOULD NOT issue new tokens from requests with DAX-issued tokens.
