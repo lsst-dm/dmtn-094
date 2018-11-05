@@ -1,5 +1,6 @@
-LSP Authentication
-==================
+####################################
+LSP Authentication and Authorization
+####################################
 
 Introduction
 ============
@@ -95,13 +96,13 @@ Additional services for querying group membership MAY be implemented.
 User and Groups Synchronization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When necessary, the IAM system SHOULD create users and groups in underlying systems; sychronizing
-membership accordingly. The sychronization SHOULD finish in under an hour, and MUST finish within 24
+When necessary, the IAM system SHOULD create users and groups in underlying systems; synchronizing
+membership accordingly. The synchronization SHOULD finish in under an hour, and MUST finish within 24
 hours.
 
 In databases, groups should be represented as roles.
 
-The assignment of privleges on resources according to users and groups is out of scope for this
+The assignment of privileges on resources according to users and groups is out of scope for this
 document.
 
 Caching Group Information
@@ -252,7 +253,7 @@ process the messages.
 
 To process a request with a capabilities message, a service MUST:
 
-1. Agree to the definiton of resources issued in the message, mapping them to the system the system
+1. Agree to the definition of resources issued in the message, mapping them to the system the system
    (or underlying system) manages
 2. Agree to the definition of operations in the message; mapping them to the operations the system
    (or underlying system) implements
@@ -262,7 +263,7 @@ To process a request with a capabilities message, a service MUST:
 For the LSP, we have not finished defining the resources of the message, though we expect those
 resources will correspond roughly to services; we expect operations will be either ``read``,
 ``write``, or ``execute`` in the context of LSP; and we expect a service will largely control
-accesss to itself, and, transitively, the data served by that service. The resources, operations,
+access to itself, and, transitively, the data served by that service. The resources, operations,
 and services currently identified are in the `data and service
 classifications <#data-and-service-classifications>`__ section below.
 
@@ -318,13 +319,13 @@ Broadly speaking, there are two main types of tokens in the LSST DM system. Toke
 are for identity, which are issued from CILogon, and tokens whose primary use are for checking
 capabilities. Identity tokens are roughly equivalent to X.509 certificates; they include information
 about the user identity, including the username for the LSST account and/or the UNIX UID, and group
-memberships, in addition to a crytpographic signature for verifying the token integrity using public
+memberships, in addition to a cryptographic signature for verifying the token integrity using public
 key encryption.
 
 Capability tokens, in the LSST DM system, will minimally also include the UNIX UID and/or username
 for the LSST account, as well as a list of capabilities for the token.
 
-Due to the additional infrastructure and definitions required for impelementing capabilities-based
+Due to the additional infrastructure and definitions required for implementing capabilities-based
 authorization, we intend to implement authentication and authorization in the LSST DM system in two
 phases.
 
@@ -394,12 +395,12 @@ several advantages.
 X.509 certificates are handled in Layer 4 in the OSI model, which typically leads to a more
 complicated setup of servers, clients, and applications.
 
-OAuth tokens are handled in Layer 7 of the OSI model, which adds flexibilty to configuration.
+OAuth tokens are handled in Layer 7 of the OSI model, which adds flexibility to configuration.
 
 OAuth tokens can include additional claims that are useful for application developers.
 
-Capabilties-based tokens allow issuance of tokens scoped accordingly to the services that a given
-application may require. A user may select only the capabilties needed for given use case, limiting
+Capabilities-based tokens allow issuance of tokens scoped accordingly to the services that a given
+application may require. A user may select only the capabilities needed for given use case, limiting
 access to sensitive information, such as `query history <#data-and-service-classifications>`__. This
 is most important in lower trust environments, such as grid computing or shared university clusters.
 
@@ -480,11 +481,11 @@ SIA
 Token Manager
 -------------
 
-For phase 1, it's desirable for clients to autoconfigure, if possible, based on the identity token.
+For phase 1, it's desirable for clients to auto-configure, if possible, based on the identity token.
 
 .. todo:: How do we get an ID token for Phase 1 for Applications?
 
-In Phase 2, it's desirable to limit the lifetime of the capabilties-based access tokens so that
+In Phase 2, it's desirable to limit the lifetime of the capabilities-based access tokens so that
 controls may be implemented at the `token issuer <#token-issuer>`__ to respond in a timely manner to
 changing conditions. In order to achieve that, the portal aspect is expected to implement a token
 manager which manages the lifecycle of the capability token using the refresh token received from
@@ -529,7 +530,7 @@ Token Proxy
 
 The LSP API Aspect MUST be able to make requests to other services. This requires relaying the
 appropriate tokens to the services. In order to satisfy a `token acceptance
-guarantee <#token-acceptance-guarantee>`__, in the context of asychronous and long-running requests,
+guarantee <#token-acceptance-guarantee>`__, in the context of asynchronous and long-running requests,
 the LSP API Aspect MUST obtain, either through self-issuance or a request to the `token
 issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other LSP
 API aspect services.
@@ -598,7 +599,7 @@ Client Token Manager to Data Service Token Authorizer
 Appendix
 ========
 
--  `InCommon <#incommon-federation>`__ and eduPerson to verify attributesabout scientists, when
+-  `InCommon <#incommon-federation>`__ and eduPerson to verify attributes about scientists, when
    possible;
 -  `CILogon <#cilogon>`__ to federate those identities and implement return identity data about
    users in the form of *claims*.
@@ -647,14 +648,14 @@ configured to either provide an interface for `HTTP Basic
 Authorization <https://tools.ietf.org/html/rfc7617>`__, or a user may manually populate a username
 and password into the URL.
 
-For compatibilty with such systems, some services in the LSP, most importantly the WebDAV service,
+For compatibility with such systems, some services in the LSP, most importantly the WebDAV service,
 MAY accept tokens in the Authorization header according to HTTP Basic scheme, where the token is the
 username and the password is ``x-oauth-basic``, or empty.
 
 .. seealso:: https://tools.ietf.org/html/rfc7617#section-2
 
 For clients which do not allow specifying a username and a password directly, additional
-compatiblity may be possible by manually constructing the URL with the token in it:
+compatibility may be possible by manually constructing the URL with the token in it:
 
    ``https://<token>:x-oath-basic@lsp.lsst.org/api``
 
@@ -693,7 +694,7 @@ JWT
 ---
 
 A JSON Web Token (JWT) is a way of representing claims to as JSON, as well as information for
-validating those claims through the use of signatures (JWS) in the token, and a meants of validating
+validating those claims through the use of signatures (JWS) in the token, and a means of validating
 those signature (JWE/JWK) - all in the same token. Included in the JWT specification is also a way
 of encoding a token using Base64 in a way that's friendly for the web.
 
@@ -705,7 +706,7 @@ request is completed by the system.
 
 A whitelist of token issuers we trust MUST be maintained, and services that validate tokens MUST be
 configurable with that whitelist. Public keys used to validate tokens must be available on all token
-issuers, follwing to the JWK specification. Applications should cache the JWK for a given token
+issuers, following to the JWK specification. Applications should cache the JWK for a given token
 issuer for at least 5 minutes and not more than 1 hour.
 
 All Access Tokens will be based on JWT. Some access tokens may also include claims implemented
@@ -729,11 +730,11 @@ SciTokens should not be used for authorizations based on identity.
 SciTokens MUST be passed using one of the allowable methods defined for `passing OAuth 2.0
 Tokens <#passing-oauth-2.0-tokens>`__.
 
-A SciToken MUST come with a ``scope`` claim. The ``scope`` claim is a space-seperated list of
+A SciToken MUST come with a ``scope`` claim. The ``scope`` claim is a space-separated list of
 capabilities. This is defined in `RFC6749 <https://tools.ietf.org/html/rfc6749#section-3.3>`__.
 
 In accordance with the principle of least-privilege, a SciTokens issuer SHOULD also allow a user to
-attenuate or remove those capabilites with successive calls to the SciTokens issuer, trading an
+attenuate or remove those capabilities with successive calls to the SciTokens issuer, trading an
 existing token for attenuated one. This may be especially useful with Grid computing, for example.
 It's important to consider the lifetime of a token in these scenarios to determine what token may be
 required.
@@ -753,7 +754,7 @@ Token Acceptance Guarantee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The LSP API aspect services intend to guarantee all requests received that a given API service
-recieved will succeed. To work with shorter access token lifetimes, the succeed. In order to
+received will succeed. To work with shorter access token lifetimes, the succeed. In order to
 guarantee this, the API services MUST issue a new token with the same claims which ONLY other API
 services will be configured to honor. The lifetime of this token is not specified, but it should the
 upper bound for the limit of time it takes to service a request, around 24 hours.
