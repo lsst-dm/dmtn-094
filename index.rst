@@ -200,7 +200,7 @@ services.
 In these cases, a service needs to acquire a list of groups associated with a user, either as claims
 in a token, or through a membership query to a service.
 
-   See Also: `Data and Service Classifications <#data-and-service-classifications>`__
+.. seealso:: `Data and Service Classifications <#data-and-service-classifications>`__
 
 Data Access Authorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -350,7 +350,7 @@ They are issued from `CILogon <#cilogon>`__ in the exchange. In `Phase
 OpenID connect tokens until the `token issuer <#token-issuer>`__ is set up as part of `phase
 2 <#phased-approach-to-authorization>`__.
 
-   See Also: `OpenID Connect Core Specification for ID
+.. seealso:: `OpenID Connect Core Specification for ID
    Token <https://openid.net/specs/openid-connect-core-1_0.html#IDToken>`__
 
 Claims
@@ -421,9 +421,8 @@ calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token i
 
    ``Authorization: Bearer [TOKEN]``
 
-..
 
-   See Also: `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
+.. seealso:: `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
 
 Notebook
 ~~~~~~~~
@@ -467,7 +466,7 @@ initializing the token manager according the the stored token SHOULD be implemen
 Data Services
 -------------
 
-   TODO: Not sure what to say here that's not already said somewhere else
+.. todo:: Not sure what to say here that's not already said somewhere else
 
 TAP
 ~~~
@@ -480,7 +479,7 @@ Token Manager
 
 For phase 1, it's desirable for clients to autoconfigure, if possible, based on the identity token.
 
-   TODO: How do we get an ID token for Phase 1 for Applications?
+.. todo:: How do we get an ID token for Phase 1 for Applications?
 
 In Phase 2, it's desirable to limit the lifetime of the capabilties-based access tokens so that
 controls may be implemented at the `token issuer <#token-issuer>`__ to respond in a timely manner to
@@ -488,7 +487,7 @@ changing conditions. In order to achieve that, the portal aspect is expected to 
 manager which manages the lifecycle of the capability token using the refresh token received from
 the `token issuer <#token-issuer>`__, as well as the token issuer.
 
-   TODO: How do we get capability tokens for Phase 2 for Applications?
+.. todo:: How do we get capability tokens for Phase 2 for Applications?
 
 Token Issuer
 ------------
@@ -503,9 +502,11 @@ In Phase 2, the token issuer will be presented with an identity token by a servi
 portal or some third-party application or library, and MUST issue a refresh token. The refresh token
 can be presented at any time to the token issuer for a capability token.
 
-   TODO: Service provided by data publisher Uses identity/refresh token to issue refresh/access
-   token For our purposes, has a fixed list of scopes plus scopes derived from LDAP groups (no
-   actual separate policy database needed) Limits scope to what client and user request/allow
+.. todo:: `Service provided by data publisher 
+          Uses identity/refresh token to issue refresh/access token 
+          For our purposes, has a fixed list of scopes plus scopes derived from LDAP groups (no
+          actual separate policy database needed) 
+          Limits scope to what client and user request/allow`
 
 Token Authorizer
 ----------------
@@ -573,8 +574,8 @@ Portal with Capability Token
 Application with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   TODO: Not clear how a user, in conjunction with the application, specifies the capabilties they
-   need.
+.. todo:: `Not clear how a user, in conjunction with the application, specifies the capabilties they
+    need.`
 
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
 
@@ -584,12 +585,12 @@ Interfaces
 Client Token Manager to Token Issuer
 ------------------------------------
 
-   TODO: I think this is already implemented in Portal and Notebook
+.. todo:: I think this is already implemented in Portal and Notebook
 
 Client Token Manager to Data Service Token Authorizer
 -----------------------------------------------------
 
-   TODO: Not sure if this is the same as `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
+.. todo:: Not sure if this is the same as `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
 
 Appendix
 ========
@@ -647,7 +648,7 @@ For compatibilty with such systems, some services in the LSP, most importantly t
 MAY accept tokens in the Authorization header according to HTTP Basic scheme, where the token is the
 username and the password is ``x-oauth-basic``, or empty.
 
-   See Also: https://tools.ietf.org/html/rfc7617#section-2
+.. seelalso:: https://tools.ietf.org/html/rfc7617#section-2
 
 For clients which do not allow specifying a username and a password directly, additional
 compatiblity may be possible by manually constructing the URL with the token in it:
@@ -707,7 +708,7 @@ issuer for at least 5 minutes and not more than 1 hour.
 All Access Tokens will be based on JWT. Some access tokens may also include claims implemented
 according to the SciTokens specification.
 
-See also: https://tools.ietf.org/html/rfc7519
+.. seealso:: https://tools.ietf.org/html/rfc7519
 
 SciTokens
 ---------
