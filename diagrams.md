@@ -217,12 +217,11 @@ WebDAV->Portal: Respond with Results
 Portal->Browser: Interactive Table Results Page
 
 ### Application with Capability Token
-> TODO: Not clear how a user, in conjunction with the application,
-> specifies the capabilties they need.
-
 title Authentication for Application with data request, using capability token
 User->Application: Initialize Application
-Application->Browser: Redirect to login service
+Application->Browser: Redirect to Token Issuer
+Browser->Token Issuer: User not logged in
+Token Issuer->Browser: Redirect to CILogon
 Browser->CILogon: Get Login Page (List of IdPs)
 CILogon->Browser: Response with Redirect to IdP
 Browser->IdP: Login with Credentials (InCommon, Github, etc...)
@@ -230,13 +229,17 @@ IdP->Browser: Redirect to CILogon with code/token from IdP
 Browser->CILogon: Request with code/token from IdP
 CILogon->IdP: Validate code/token
 IdP->CILogon: SAML assertions/OAuth claims for User (with email)
-CILogon->Browser: Redirect to localhost with access code
-Browser->User: Copy URL parameters in URL
-User->Application: Access Code
-Application->CILogon: Present Access code
-CILogon->Application: OpenID Connect Refresh and Access tokens (Identity tokens)
-Application->Token Issuer: Request for Capabilities Refresh \n(with only necessary capabilities)
-Token Issuer->Application: Capabilities Refresh Token
+CILogon->Browser: Redirect to Token Issuer with access code
+Browser->Token Issuer: Access Code
+Token Issuer->CILogon: Present Access code
+CILogon->Token Issuer: OpenID Connect Refresh token (Identity token)
+Token Issuer->Browser: Authenticated, store cookies
+Browser->User: Show page with capabilities
+User->Browser: Submit requested capabilities
+Browser->Token Issuer: Post token request
+Token Issuer->Browser: Download Tokens Interface
+Browser->User: Autocopy capability refresh token
+User->Application: Past Capability refresh token \n(with only necessary capabilities)
 Application->Application: Initialize Token Manager
 Application->User: Authorization okay, Application initialized
 User->Application: Perform Cone Search

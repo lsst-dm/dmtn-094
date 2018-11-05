@@ -586,9 +586,6 @@ Portal with Capability Token
 Application with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. todo:: `Not clear how a user, in conjunction with the application, specifies the capabilties they
-    need.`
-
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
    :target: ./_static/Authentication_for_Application_with_data_request_using_capability_token.png
 
