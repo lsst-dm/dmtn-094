@@ -648,7 +648,7 @@ For compatibilty with such systems, some services in the LSP, most importantly t
 MAY accept tokens in the Authorization header according to HTTP Basic scheme, where the token is the
 username and the password is ``x-oauth-basic``, or empty.
 
-.. seelalso:: https://tools.ietf.org/html/rfc7617#section-2
+.. seealso:: https://tools.ietf.org/html/rfc7617#section-2
 
 For clients which do not allow specifying a username and a password directly, additional
 compatiblity may be possible by manually constructing the URL with the token in it:
