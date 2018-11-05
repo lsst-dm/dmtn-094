@@ -660,7 +660,7 @@ compatiblity may be possible by manually constructing the URL with the token in 
 
 ..
 
-   Note: Care should be taken to always make the URL https, so tokens aren't passed incorrectly.
+.. warning:: Care should be taken to always make the URL https, so tokens aren't passed incorrectly.
 
 OpenID Connect
 --------------
