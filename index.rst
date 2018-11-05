@@ -554,16 +554,19 @@ Notebook with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_OpenID_Connect.png
+   :target: ./_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_OpenID_Connect.png
 
 Portal with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/Authentication_for_Portal_with_data_request_using_CILogon_and_OpenID_Connect.png
+   :target: ./_static/Authentication_for_Portal_with_data_request_using_CILogon_and_OpenID_Connect.png
 
 Application with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
+   :target: ../../_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
 
 Phase 2 - Capability Tokens
 ---------------------------
@@ -572,11 +575,13 @@ Notebook with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_and_Capability_token.png
+   :target: ./_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_and_Capability_token.png
 
 Portal with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/Authentication_to_Portal_with_data_request_using_capability_token.png
+   :target: ./_static/Authentication_to_Portal_with_data_request_using_capability_token.png
 
 Application with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -585,6 +590,7 @@ Application with Capability Token
     need.`
 
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
+   :target: ./_static/Authentication_for_Application_with_data_request_using_capability_token.png
 
 Interfaces
 ==========
