@@ -78,7 +78,7 @@ The IAM system SHOULD disallow group names that are not representable as UNIX gr
 database role names within the Data Management System. This implies a 32 character limit, as limited
 by Red Hat Linux.
 
-   Note: Before Oracle 12.2, there's a limit of 30 characters on role names.
+.. note:: Before Oracle 12.2, there's a limit of 30 characters on role names.
 
 All users MUST be a member and the only member of a user-private group. The group name should be the
 name of the user. This follows the Red Hat feature called `User Private
