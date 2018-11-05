@@ -141,9 +141,12 @@ roles must also have permissions associated with roles. As such, Roles and are g
 scope for this document, but they are mentioned for informational purposes.
 
 It's possible that roles may be implemented group membership. For example, the portal web
-application may rely on have the groups ``lsst_int_portal_usdac_user``,
+application may rely on having the groups ``lsst_int_portal_usdac_user``,
 ``lsst_int_portal_pdac_user``, and ``lsst_int_portal_admin`` defined. In this example, these groups
-are effectively roles. The portal application can
+are effectively roles. The portal application can limit what a user can do based on membership
+in these groups. The portal may also  manage the roles in a user session context; a user may be
+allowed to be an admin by being a member of the admin group, but the user may assume the user role
+by default, with forced re-authentication being necessary to assume the admin role.
 
 Authentication
 --------------
@@ -537,6 +540,12 @@ guarantee <#token-acceptance-guarantee>`__, in the context of asynchronous and l
 the LSP API Aspect MUST obtain, either through self-issuance or a request to the `token
 issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other LSP
 API aspect services.
+
+.. note:: `Safe HTTP methods
+          <https://tools.ietf.org/html/rfc7231#section-4.2.1>`__,
+          such as `HEAD` and `GET` requests SHOULD NOT need
+          reissuance, as they SHOULD NOT take any other action other
+	  than simple retrieval.
 
 The reissued token MAY alter the values of the following ``iss``, ``exp``, and ``iat`` claims. All
 other claims MUST be included in the reissued token, unmodified.
