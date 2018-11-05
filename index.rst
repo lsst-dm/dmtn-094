@@ -356,9 +356,12 @@ Claims
 
 Minimally, the identity tokens issued by CILogon MUST include the following claims.
 
-``uidNumber`` - The LSST UNIX UID. ``isMemberOf`` - A list of JSON Objects with the objects composed
-of a ``name`` key corresponding to UNIX group names; and ``id`` key corresponding to the UNIX GID
-for the group name.
+:``uidNumber``: The LSST UNIX UID. 
+
+:``isMemberOf``: A list of JSON Objects with the objects composed
+    of a ``name`` key corresponding to UNIX group names; and  ``id`` key corresponding to the UNIX GID
+    for the group name.
+
 
 Capability tokens - SciTokens
 -----------------------------
@@ -373,10 +376,12 @@ Claims
 Minimally, the capability token issued by the `token issuer <#token-issuer>`__ MUST include the
 following claims:
 
-``sub`` - The LSST User UNIX ID. Normally, SciTokens recommends against using this field for
-identification purposes. ``scope`` - This is a list of space-separated capabilities. Capabilities
-are derived from `the data and service classifications <#data-and-service-classifications>`__. This
-is similar to how GitHub allows scopes.
+:``sub``: The LSST User UNIX ID. Normally, SciTokens recommends against using this field for
+    identification purposes.
+
+:``scope``: This is a list of space-separated capabilities. Capabilities
+    are derived from `the data and service classifications <#data-and-service-classifications>`__. This
+    is similar to how GitHub allows scopes.
 
 .. _tokens-vs-x509:
 
