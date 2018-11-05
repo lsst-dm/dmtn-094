@@ -120,7 +120,7 @@ form of logout mechanism. Single Logout is out of scope for this document.
 Privacy and File Sharing
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-   This section is informational
+.. note:: This section is informational
 
 Through the use of sticky bits, umasks, and user-private groups, it will be possible to build a
 system that can both preserve privacy, by setting sticky bits on user-private directories for the
@@ -130,7 +130,7 @@ such as those owned by a Science Collaboration.
 Roles
 -----
 
-   This section is informational
+.. note:: This section is informational
 
 There's currently no concept of roles in the existing IAM system for NCSA. A system that represents
 roles must also have permissions associated with roles. As such, Roles and are generally out of
@@ -213,7 +213,7 @@ Low-Level systems SHOULD be relied upon to authorize access to data. This includ
 Capabilities-based Authorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   This section is informational
+.. note:: This section is informational
 
 We expect some form of capabilities-based authorization will be useful for the Data Management
 System in the future. This section is an overview of capabilities-based authorization and
@@ -269,11 +269,9 @@ classifications <#data-and-service-classifications>`__ section below.
 Data and Service Classifications
 --------------------------------
 
-   This section is informational
+.. note:: This section is informational
 
-..
-
-   This section is subject to change
+.. warning:: This section is subject to change
 
 These classifications are loosely based on LPM-122 classifications, LDM-542, and LSE-163. Work is
 being performed to clarify the classifications of data and services together.
