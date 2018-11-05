@@ -1,6 +1,9 @@
-####################################
-LSP Authentication and Authorization
-####################################
+:tocdepth: 2
+
+.. sectnum::
+
+.. note::
+
 
 Introduction
 ============
