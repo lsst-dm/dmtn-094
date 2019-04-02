@@ -549,6 +549,8 @@ The token issuer will handle several use cases:
 With the PKCE flow, the refresh token can be presented at any time to the token issuer to issue a
 short-lived capability token.
 
+The token issuer implements a token download interface. Minimally, the token download interface
+allows a user to select the capabilities a token should be configured with and download the token.
 
 Token Authorization
 -------------------
