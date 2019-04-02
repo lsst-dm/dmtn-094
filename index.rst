@@ -392,7 +392,7 @@ Approach 2, when initially implemented, will rely on JWT tokens in the form of S
 tokens, with a long but bounded lifetime - 24 hours or more. When fully implemented, Approach 2
 will also implement `PKCE <#pkce>`__ with long-lived refresh tokens and short lived access tokens.
 This can enable delegation to untrusted computing environments, such as the Grid - realizing a
-complete implementation SciTokens.
+complete implementation of SciTokens.
 
 
 Identity tokens - OpenID Connect
@@ -400,9 +400,9 @@ Identity tokens - OpenID Connect
 
 All identity tokens are in the form of OpenID Connect tokens. All OpenID connect tokens are `JWT
 <#jwt>`__ tokens. They are issued from `CILogon <#cilogon>`__ in the exchange. In `Approach
-1 <#approaches-to-authorization>`__ of our authentication system, we will pass around the
-OpenID connect tokens until the `token issuer <#token-issuer>`__ is set up as part of `approach
-2 <#approaches-to-authorization>`__.
+1 <#approaches-to-authorization>`__, we only use claims from tokens issues by CILogon. Tokens may
+be reissued by the `token issuer <#token-issuer>`__ to satisfy the `token acceptance
+guarantee <#token-acceptance-guarantee>`__, but all claims are equal to the CILogon claims.
 
 .. seealso:: `OpenID Connect Core Specification for ID
    Token <https://openid.net/specs/openid-connect-core-1_0.html#IDToken>`__
@@ -475,12 +475,10 @@ interface, and an identity token with the proper `identity token claims
 <#identity-token-claims>`__. The token proxy, through the `token issuer <#token-issuer>`__
 component, will then reissue the token with the same claims but with a 24-hour lifetime.
 
-The portal will have access to that token, and setup it's own user session based on the information
-in the token, and may setup per-user clients, configured with that token, for future execution of
-requests to the API aspect.
-
-When calls are made to API Aspect, the access token is passed as an OAuth 2.0 Bearer token in the
-HTTP ``Authorization`` header, according to the OAuth 2.0 Specification:
+The portal will be passed that token in an HTTP request header. It can use the information in the
+token to customize its behavior. It passes that token in requests to the API aspect as an
+OAuth 2.0 Bearer token via the HTTP ``Authorization`` header, according to the OAuth 2.0
+Specification:
 
    ``Authorization: Bearer [TOKEN]``
 
@@ -497,13 +495,13 @@ can then make the token available in the user's notebook environment.
 
 Once a user is logged in to the notebook aspect, with the token in the user's environment, a user
 in the notebook aspect can be viewed as a special case of `data access libraries
-<#data-access-libraries>`__, where we have some access to the user's local environment, so we may
-be able to bootstrap an authentication mechanism on behalf of the user which ensures any
+<#data-access-libraries>`__, where we have some access to the user's local environment, so we can
+bootstrap an authentication mechanism on behalf of the user which ensures any
 necessary tokens are implicitly available in the user's environment. For software developed by
-the LSST that may utilize the LSP API aspect services, such as the Butler, we will ensure those
+LSST that utilizes the LSP API aspect services, such as the Butler, we will ensure those
 applications can be automatically configured based on some form of information in the user's
-Notebook environment. Other third party software MAY be automatically configured, or they should
-be configurable in the same way as if a user was running on their local machine and not in an
+Notebook environment. Other third party software may be automatically configured, otherwise they
+will be configurable in the same way as if a user was running on their local machine and not in an
 LSP instance.
 
 TOPCAT
@@ -538,7 +536,7 @@ Token Issuer
 
 The token issuer component is fundamentally a part of the IAM system. The token issuer's primary
 purpose is to issue tokens with appropriate capabilities, based on a combination of information
-from LDAP, and user-selected scopes.
+from LDAP and user-selected scopes.
 
 The token issuer component is theoretically not needed for Approach 1, but due to complexities in
 implementation and integration with the notebook environment, it's desired for simplification.
@@ -558,7 +556,7 @@ allows a user to select the capabilities a token should be configured with and d
 Token Authorization
 -------------------
 
-For both approaches, we will use a common token authorizer component which can validate the tokens.
+For both approaches, we use a common token authorizer component which validates the tokens.
 
 For Approach 1, the token proxy is responsible for inspecting the token for any groups
 of interest, or delegating to a service, to control access to the service.
