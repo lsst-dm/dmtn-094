@@ -767,9 +767,10 @@ according to the SciTokens specification.
 PKCE
 ----
 
-Proof Key for Code Exchange (PKCE) is an extension to the Authorization Code flow for OAuth 2.0.
-Primarily, it doesn't require a secret OAuth 2.0 ``client_id``, making it suitable for native
-applications, which are effectively public OAuth 2.0 clients.
+`Proof Key for Code Exchange <https://tools.ietf.org/html/rfc7636>`__ (PKCE) is an extension to the
+Authorization Code flow for OAuth 2.0. Primarily, it doesn't require a secret OAuth 2.0
+``client_id``, making it suitable for native applications, which are effectively public OAuth 2.0
+clients.
 
 SciTokens
 ---------
