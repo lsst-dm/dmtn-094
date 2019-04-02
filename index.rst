@@ -588,17 +588,16 @@ services via HTTP headers.
 * ``X-Auth-Request-Token: [token]``
 * ``Authorization: Bearer [token]``
 
-The token proxy, or it's conceptual deployment, must be flexible enough to set those headers to a
-variety of values, if the service is unable to accept the default headers. Examples include
-
-* ``X-Authorization: Bearer [token]``
-
 Additional information about the user may also be relayed to the services from the token proxy,
 such as the preferred identity email, LSST username, and LSST UNIX UID.
 
 * ``X-Auth-Request-Email: [email]``
 * ``X-Auth-Request-User: [username]``
 * ``X-Auth-Request-Uid: [uid]``
+
+.. note:: Downstream services may need to rely on some form of header renaming, renaming headers
+          to a variety of values, if the service is unable to accept the default headers. This is
+          usually accomplished via reverse proxy configuration in some form.
 
 Sequence Diagrams
 =================
