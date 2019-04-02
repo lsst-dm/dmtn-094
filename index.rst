@@ -318,56 +318,101 @@ being performed to clarify the classifications of data and services together.
 | Notebook               | execute                | high                   | Notebook               |
 +------------------------+------------------------+------------------------+------------------------+
 
+
+From these data classifications, a set of capabilities can be extrapolated. These capabilities
+can be expressly checked for authorization to the respective services. When a user first logs in,
+we may also map a list of all possible capabilities a user may have by checking group membership
+for a given instance. We can do this by programmatically constructing LDAP groups and adding
+users to that group. A group that is defined for this explicit purpose is called a capability group.
+**Membership in a capability group determines the possible capabilities a user may have.** All
+groups at NCSA must be namespaced, so there is a predefined prefix that exists for each
+capability group. Since that prefix would be instance-dependent (such as ``lsst_int_lsp_stable_``),
+we document the suffix for that capability.
+
++------------------------+------------------------+------------+-------------------------+
+| Resources              | Capabilities           | API Access | Capability Group Suffix |
++========================+========================+============+=========================+
+| Image Access           | read:image             | Yes        | img                     |
++------------------------+------------------------+------------+-------------------------+
+| Image Access           | read:image/md          | Yes        | img_md                  |
+| (Metadata)             |                        |            |                         |
++------------------------+------------------------+------------+-------------------------+
+| Table Access (DR,      | read:tap               | Yes        | tap                     |
+| Alerts)                |                        |            |                         |
++------------------------+------------------------+------------+-------------------------+
+| Table Access           | read:tap/efd           | Yes        | tap_efd                 |
+| (Transformed EFD)      |                        |            |                         |
++------------------------+------------------------+------------+-------------------------+
+| Table Access (User and | read:tap/user,         | Yes        | tap_usr                 |
+| Shared)                | write:tap/user         |            |                         |
++------------------------+------------------------+------------+-------------------------+
+| User Query History     | read:tap/history       | Yes        | tap_hist                |
++------------------------+------------------------+------------+-------------------------+
+| File/Workspace Access  | read:workspace         | Yes        | ws                      |
++------------------------+------------------------+------------+-------------------------+
+| File/Workspace Access  | read:workspace/user,   | Yes        | ws_usr                  |
+| (User/Shared)          | write:workspace/user   |            |                         |
++------------------------+------------------------+------------+-------------------------+
+| Portal                 | exec:portal            | No         | portal                  |
++------------------------+------------------------+------------+-------------------------+
+| Notebook               | exec:notebook          | No         | nb                      |
++------------------------+------------------------+------------+-------------------------+
+
 Tokens
 ======
 
 Broadly speaking, there are two main types of tokens in the LSST DM system. Tokens whose primary use
-are for identity, which are issued from CILogon, and tokens whose primary use are for checking
-capabilities. Identity tokens are roughly equivalent to X.509 certificates; they include information
-about the user identity, including the username for the LSST account and/or the UNIX UID, and group
-memberships, in addition to a cryptographic signature for verifying the token integrity using public
-key encryption.
+are for identity, which are similar to those issued from CILogon, and tokens whose primary use are
+for checking capabilities. Identity tokens are roughly equivalent to X.509 certificates; they
+include information about the user identity, including the username for the LSST account and/or
+the UNIX UID, and group memberships, in addition to a cryptographic signature for verifying the
+token integrity using public key encryption.
 
 Capability tokens, in the LSST DM system, will minimally also include the UNIX UID and/or username
-for the LSST account, as well as a list of capabilities for the token.
+for the LSST account, as well as a list of capabilities for the token. Those capabilities are
+listed in the ``scope`` claim of a the token.
 
-Due to the additional infrastructure and definitions required for implementing capabilities-based
-authorization, we intend to implement authentication and authorization in the LSST DM system in two
-phases.
+Approaches to Authorization
+---------------------------
 
-Phased Approach to Authorization
---------------------------------
+Approach 1 is authorization primarily through identity. LSP services will rely on identity from
+identity tokens, including UID and group membership, to authorize access to services; services,
+notably the LSP API aspect, will implement impersonation in some form to delegate authorization
+to the underlying systems.
 
-Phase 1 is authorization through identity. LSP services will rely on identity from identity tokens,
-including UID and group membership, to authorize access to services; services, notably the LSP API
-aspect, will implement impersonation in some form to delegate authorization to the underlying
-systems.
+Approach 2 is the implementation of authorization first through capabilities at the service level;
+followed by the same identity-based authorization techniques from Approach 1. It can be layered
+on top of Approach 1, and as a result, gradually implemented.
 
-Phase 2 is the implementation of authorization first through capabilities at the service level;
-followed by the same identity-based authorization techniques from Phase 1.
+Approach 2, when initially implemented, will rely on JWT tokens in the form of SciTokens access
+tokens, with a long but bounded lifetime - 24 hours or more. When fully implemented, Approach 2
+will also implement `PKCE <#pkce>`__ with long-lived refresh tokens and short lived access tokens.
+This can enable delegation to untrusted computing environments, such as the Grid - realizing a
+complete implementation SciTokens.
+
 
 Identity tokens - OpenID Connect
 --------------------------------
 
-All identity tokens are OpenID Connect tokens. All OpenID connect tokens are `JWT <#jwt>`__ tokens.
-They are issued from `CILogon <#cilogon>`__ in the exchange. In `Phase
-1 <#phased-approach-to-authorization>`__ of our authentication system, we will pass around the
-OpenID connect tokens until the `token issuer <#token-issuer>`__ is set up as part of `phase
-2 <#phased-approach-to-authorization>`__.
+All identity tokens are in the form of OpenID Connect tokens. All OpenID connect tokens are `JWT
+<#jwt>`__ tokens. They are issued from `CILogon <#cilogon>`__ in the exchange. In `Approach
+1 <#approaches-to-authorization>`__ of our authentication system, we will pass around the
+OpenID connect tokens until the `token issuer <#token-issuer>`__ is set up as part of `approach
+2 <#approaches-to-authorization>`__.
 
 .. seealso:: `OpenID Connect Core Specification for ID
    Token <https://openid.net/specs/openid-connect-core-1_0.html#IDToken>`__
 
-Claims
-~~~~~~
+Identity Token Claims
+~~~~~~~~~~~~~~~~~~~~~
 
 Minimally, the identity tokens issued by CILogon MUST include the following claims.
 
-:``uidNumber``: The LSST UNIX UID. 
+:``uidNumber``: The LSST UNIX UID.
 
 :``isMemberOf``: A list of JSON Objects with the objects composed
-    of a ``name`` key corresponding to UNIX group names; and  ``id`` key corresponding to the UNIX GID
-    for the group name.
+    of a ``name`` key corresponding to UNIX group names; and  ``id`` key corresponding to the UNIX
+    GID for the group name.
 
 
 Capability tokens - SciTokens
@@ -383,12 +428,11 @@ Claims
 Minimally, the capability token issued by the `token issuer <#token-issuer>`__ MUST include the
 following claims:
 
-:``sub``: The LSST User UNIX ID. Normally, SciTokens recommends against using this field for
-    identification purposes.
+:``uidNumber``: The LSST UNIX UID.
 
-:``scope``: This is a list of space-separated capabilities. Capabilities
-    are derived from `the data and service classifications <#data-and-service-classifications>`__. This
-    is similar to how GitHub allows scopes.
+:``scope``: ``scope`` is the scope claim. In our implementation, this is a list of space-separated
+    capabilities. Capabilities are derived from `the data and service classifications
+    <#data-and-service-classifications>`__. This is similar to how GitHub allows scopes.
 
 .. _tokens-vs-x509:
 
@@ -419,15 +463,20 @@ Clients
 Portal
 ~~~~~~
 
-When a user first logs into the portal, they will be redirected to the token issuer. They may select
-either NCSA as their Identity Provider or their home institution. CILogon executes the login,
-ultimately returning information about who the user is at NCSA to the portal aspect through
-CILogon's OpenID Connect interface and the token's ``sub`` claim. This provides the Portal aspect
-with an access token and a refresh token.
+When a user first logs into the portal, the `token proxy <#token-proxy>`__ will intercept the login
+and redirect them to CILogon. They may select either NCSA as their Identity Provider or an
+associated external identity. CILogon executes the login, ultimately returning information about
+who the user is at NCSA to the token proxy through CILogon's OpenID Connect interface, and an
+identity token with the proper `identity token claims <#identity-token-claims>`__. The token
+proxy, through the `token issuer <#token-issuer>`__ component, will then reissue the token with
+the same claims but with a 24-hour lifetime.
 
-Firefly is an OAuth 2.0 client and SHOULD use the refresh token to generate new access tokens. When
-calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token in the HTTP
-``Authorization`` header, according to the OAuth 2.0 Specification:
+The portal will have access to that token, and setup it's own user session based on the information
+in the token, and may setup per-user clients, configured with that token, for future execution of
+requests to the API aspect.
+
+When calls are made to API Aspect, the access token is passed as an OAuth 2.0 Bearer token in the
+HTTP ``Authorization`` header, according to the OAuth 2.0 Specification:
 
    ``Authorization: Bearer [TOKEN]``
 
@@ -437,28 +486,29 @@ calls are made to DAX, the access token is passed as an OAuth 2.0 Bearer token i
 Notebook
 ~~~~~~~~
 
-The Portal and the notebook MAY share some common session information about the user, including
-refresh tokens, to enable smooth transitions and interoperability between the two. How this is
-implemented is undefined.
+The portal and the notebook will share the same login flow, both being behind the `token proxy
+<#token-proxy>`__. Once the login has progressed past the token proxy and to the notebook, the
+notebook will initiate a notebook session based on the token that it has received. The notebook
+can then make the token available in the user's notebook environment.
 
-Once a user is logged in to the Notebook access, a user in the Notebook aspect can be viewed as a
-special case of `data access libraries <#data-access-libraries>`__, where we have some access to the
-user's local environment, so we may be able to bootstrap an authentication mechanism on behalf of
-the user which ensures any necessary tokens are implicitly available in the user's environment. For
-software developed by the LSST that may utilize the LSP API aspect services, such as the Butler, we
-will ensure those applications can be automatically configured based on some form of information in
-the user's Notebook environment. Other third party software MAY be automatically configured, or they
-should be configurable in the same way as if a user was running on their local machine and not in an
+Once a user is logged in to the notebook aspect, with the token in the user's environment, a user
+in the notebook aspect can be viewed as a special case of `data access libraries
+<#data-access-libraries>`__, where we have some access to the user's local environment, so we may
+be able to bootstrap an authentication mechanism on behalf of the user which ensures any
+necessary tokens are implicitly available in the user's environment. For software developed by
+the LSST that may utilize the LSP API aspect services, such as the Butler, we will ensure those
+applications can be automatically configured based on some form of information in the user's
+Notebook environment. Other third party software MAY be automatically configured, or they should
+be configurable in the same way as if a user was running on their local machine and not in an
 LSP instance.
 
 TOPCAT
 ~~~~~~
 
 LSST will be working with the TOPCAT developers to find the best method of authentication. It's
-expected that the embedded HTTP basic method will work to start. A slightly modified workflow from
-phase 1 for an `application with identity token <#application-with-identity-tokens>`__ or phase 2
-for for an `application with a capability token <#application-with-capability-tokens>`__ is
-expected.
+expected that the embedded HTTP basic method will work to start, based on `the HTTP Basic scheme
+for OAuth  <#passing-oauth-2.0-tokens>`__. Once Approach 2 is fully implemented, it may be
+desirable to switch to the `PKCE <#pkce>`__ flow with refresh tokens.
 
 Data access libraries
 ~~~~~~~~~~~~~~~~~~~~~
@@ -470,93 +520,84 @@ capability token may be passed in the URL with the HTTP Basic Auth scheme.
 Within the Notebook aspect, tokens MUST be available, either in an well-defined environment
 variables or as a file in a locations.
 
-LSST SHOULD implement a token manager for Astroquery. For the notebook aspect, a method for
-initializing the token manager according the the stored token SHOULD be implemented.
-
-Data Services
--------------
-
-.. todo:: Not sure what to say here that's not already said somewhere else
-
-TAP
-~~~
-
-SIA
-~~~
 
 Token Manager
 -------------
 
-For phase 1, it's desirable for clients to auto-configure, if possible, based on the identity token.
-
-.. todo:: How do we get an ID token for Phase 1 for Applications?
-
-In Phase 2, it's desirable to limit the lifetime of the capabilities-based access tokens so that
-controls may be implemented at the `token issuer <#token-issuer>`__ to respond in a timely manner to
-changing conditions. In order to achieve that, the portal aspect is expected to implement a token
-manager which manages the lifecycle of the capability token using the refresh token received from
-the `token issuer <#token-issuer>`__, as well as the token issuer.
-
-.. todo:: How do we get capability tokens for Phase 2 for Applications?
+In both approaches, it's desirable for clients to auto-configure, if possible, based on the tokens
+they have available in their environment. Tokens may be issued manually through a token download
+interface, or they may be issued as part of an OAuth2 `PKCE <#pkce>`__ flow when Approach 2 is fully
+implemented.
 
 Token Issuer
 ------------
 
-The token issuer is fundamentally a part of the IAM system. The token issuer's primary purpose is to
-issue tokens with appropriate capabilities, based on a combination of information from LDAP, and
-user-selected scopes.
+The token issuer component is fundamentally a part of the IAM system. The token issuer's primary
+purpose is to issue tokens with appropriate capabilities, based on a combination of information
+from LDAP, and user-selected scopes.
 
-The token issuer is not needed for Phase 1.
+The token issuer component is theoretically not needed for Approach 1, but due to complexities in
+implementation and integration with the notebook environment, it's desired for simplification.
 
-In Phase 2, the token issuer will be presented with an identity token by a service, either the
-portal or some third-party application or library, and MUST issue a refresh token. The refresh token
-can be presented at any time to the token issuer for a capability token.
+The token issuer will handle several use cases:
 
-.. todo:: `Service provided by data publisher 
-          Uses identity/refresh token to issue refresh/access token 
-          For our purposes, has a fixed list of scopes plus scopes derived from LDAP groups (no
-          actual separate policy database needed) 
-          Limits scope to what client and user request/allow`
+1. Token reissuance of identity tokens from Approach 1.
+2. Token reissuance to satisfy the `token acceptance guarantee <#token-acceptance-guarantee>`__
+3. Token issuance, by way of the token download interface, of capability tokens from Approach 2.
+4. Token issuance, by way of PKCE flow, of refresh tokens and capability tokens from Approach 2.
+With the PKCE flow, the refresh token can be presented at any time to the token issuer to issue a
+short-lived capability token.
 
-Token Authorizer
-----------------
 
-All LSP services are responsible for validating tokens. For Phase 1, the portal and notebook are
-responsible for inspecting the token for any groups of interest, or delegating to a service, to
-control access to the service. The LSP API aspect is responsible for verifying the token received,
-as well as also inspecting the token for any groups of interest. Services in the LSP API aspect are
-also responsible for impersonation for the underlying systems.
+Token Authorization
+-------------------
 
-In Phase 2, services in the LSP API aspect will rely on capabilities in the ``scope`` claim of the
-capability token to limit access to the requisite service. It will then rely on impersonation for
-finer-grained authorization.
+For both approaches, we will use a common token authorizer component which can validate the tokens.
+
+For Approach 1, the token proxy is responsible for inspecting the token for any groups
+of interest, or delegating to a service, to control access to the service.
+
+In Approach 2, services in the LSP API aspect will rely on capabilities in the ``scope`` claim of
+the capability token to limit access to the requisite service. A service may then rely on
+impersonation for finer-grained authorization.
+
+In both approaches, services in the LSP API aspect may also be responsible for inspecting
+the token for groups of interest or capabilities, but the token could be assumed to be validated.
 
 Token Proxy
 -----------
 
-The LSP API Aspect MUST be able to make requests to other services. This requires relaying the
-appropriate tokens to the services. In order to satisfy a `token acceptance
-guarantee <#token-acceptance-guarantee>`__, in the context of asynchronous and long-running requests,
-the LSP API Aspect MUST obtain, either through self-issuance or a request to the `token
-issuer <#token-issuer>`__, a new token with a bounded lifetime which can be honored by the other LSP
-API aspect services.
-
-.. note:: `Safe HTTP methods
-          <https://tools.ietf.org/html/rfc7231#section-4.2.1>`__,
-          such as `HEAD` and `GET` requests SHOULD NOT need
-          reissuance, as they SHOULD NOT take any other action other
-	  than simple retrieval.
+The Token Proxy is a single gateway to which can handle OAuth2 authentication flows, and integrate
+with the `token authorization <#token-authorization>`__ and `token issuer <#token-issuer>`__
+components. Critically, through the token issuer, the token proxy implements transparent token
+reissuance for downstream services.
 
 The reissued token MAY alter the values of the following ``iss``, ``exp``, and ``iat`` claims. All
-other claims MUST be included in the reissued token, unmodified.
+other claims MUST be included in the reissued token, unmodified. Additional claims may also be
+included.
 
-Due to likely dependencies on a `token issuer <#token-issuer>`__, the token proxy will be delayed
-until Phase 2.
+When reissuing tokens, the token proxy MUST make those headers available to the downstream
+services via HTTP Headers.
+
+* ``X-Auth-Request-Token: [token]``
+* ``Authorization: Bearer [token]``
+
+The token proxy, or it's conceptual deployment, must be flexible enough to set those headers to a
+variety of values, if the service is unable to accept the default headers. Examples include
+
+* ``X-Authorization: Bearer [token]``
+
+Additional information about the user may also be relayed to the services from the token proxy,
+such as the preferred identity email, LSST username, and LSST UNIX UID.
+
+* ``X-Auth-Request-Email: [email]``
+* ``X-Auth-Request-User: [username]``
+* ``X-Auth-Request-Uid: [uid]``
 
 Sequence Diagrams
 =================
 
-Phase 1 - Identity Tokens
+Approach 1 - Identity Tokens
 -------------------------
 
 Notebook with Identity Tokens
@@ -577,7 +618,7 @@ Application with Identity Tokens
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
    :target: ../../_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
 
-Phase 2 - Capability Tokens
+Approach 2 - Capability Tokens
 ---------------------------
 
 Notebook with Capability Token
@@ -643,7 +684,9 @@ identity provider may be Google, Github or an institution. Typically, institutio
 implement OAuth 2.0 interfaces, but do implement interfaces with Shibboleth and SAML.
 
 OAuth 2.0 specifies how you may ask for information about a user. It also specifies a method,
-through tokens, which a service may use to request and validate information about the user.
+through tokens, which a service may use to request and validate information about the user. OAuth
+2.0 has several application flows that may be chosen based on the application at hand and
+desired security requirements.
 
 .. _passing-oauth-20-tokens:
 
@@ -672,7 +715,7 @@ username and the password is ``x-oauth-basic``, or empty.
 For clients which do not allow specifying a username and a password directly, additional
 compatibility may be possible by manually constructing the URL with the token in it:
 
-   ``https://<token>:x-oath-basic@lsp.lsst.org/api``
+   ``https://<token>:x-oauth-basic@lsp.lsst.org/api``
 
 ..
 
@@ -729,6 +772,13 @@ according to the SciTokens specification.
 
 .. seealso:: https://tools.ietf.org/html/rfc7519
 
+PKCE
+----
+
+Proof Key for Code Exchange (PKCE) is an extension to the Authorization Code flow for OAuth 2.0.
+Primarily, it doesn't require a secret OAuth 2.0 ``client_id``, making it suitable for native
+applications, which are effectively public OAuth 2.0 clients.
+
 SciTokens
 ---------
 
@@ -769,9 +819,14 @@ Token Acceptance Guarantee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The LSP API aspect services intend to guarantee all requests received that a given API service
-received will succeed. To work with shorter access token lifetimes, the succeed. In order to
-guarantee this, the API services MUST issue a new token with the same claims which ONLY other API
-services will be configured to honor. The lifetime of this token is not specified, but it should the
-upper bound for the limit of time it takes to service a request, around 24 hours.
+received will succeed. In order to guarantee this, the token proxy MUST issue a new token with
+the same claims with only the API aspect as the intended audience. The lifetime of this
+token is not specified, but it should the upper bound for the limit of time it takes to service a
+request, around 24 hours.
 
-The LSP API aspect services SHOULD NOT issue new tokens from requests with DAX-issued tokens.
+The LSP API aspect services SHOULD NOT reissue new tokens from previously reissued tokens.
+
+.. note:: `Safe HTTP methods
+          <https://tools.ietf.org/html/rfc7231#section-4.2.1>`__,
+          such as `HEAD` and `GET` requests SHOULD NOT need
+          reissuance, as they SHOULD NOT take any other action other than simple retrieval.
