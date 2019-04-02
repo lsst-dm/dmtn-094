@@ -374,7 +374,7 @@ token integrity using public key encryption. Because of these similarities, they
 nearly all use cases covered by X.509 certificates. From there, the similarities end. Identity
 tokens allow encoding of much more authentication information about a subject which are useful
 is useful LSST system. More information can be found about those differences in the `Tokens vs. X
-.509 <#tokens-vs--X-509>`__ section.
+.509 <#tokens-vs-x-509>`__ section.
 
 Capability tokens, expand in the LSST DM system, will minimally also include the UNIX UID and/or
 username for the LSST account, as well as a list of capabilities for the token. Those
