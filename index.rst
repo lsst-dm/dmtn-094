@@ -639,18 +639,6 @@ Application with Capability Token
 .. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
    :target: ./_static/Authentication_for_Application_with_data_request_using_capability_token.png
 
-Interfaces
-==========
-
-Client Token Manager to Token Issuer
-------------------------------------
-
-.. todo:: I think this is already implemented in Portal and Notebook
-
-Client Token Manager to Data Service Token Authorizer
------------------------------------------------------
-
-.. todo:: Not sure if this is the same as `Passing OAuth 2.0 Tokens <#passing-oAuth-2.0-tokens>`__
 
 Appendix
 ========
