@@ -323,7 +323,7 @@ being performed to clarify the classifications of data and services together.
 
 
 From these data classifications, a set of capabilities has been defined. These capabilities
-can be expressly checked for authorization to the respective services. When a user first logs in,
+are expressly checked for authorization to the respective services. When a user first logs in,
 we map a list of all possible capabilities a user may have by checking group membership
 for a given instance. We do this by constructing LDAP groups and adding users to that group. A
 group that is defined for this explicit purpose is called a capability group.
