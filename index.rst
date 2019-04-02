@@ -385,7 +385,7 @@ notably the LSP API aspect, will implement impersonation in some form to delegat
 to the underlying systems.
 
 Approach 2 is the implementation of authorization first through capabilities at the service level;
-followed by the same identity-based authorization techniques from Approach 1. It can be layered
+followed by the same identity-based authorization techniques from Approach 1. It is layered
 on top of Approach 1, and as a result, gradually implemented.
 
 Approach 2, when initially implemented, will rely on JWT tokens in the form of SciTokens access
@@ -393,6 +393,11 @@ tokens, with a long but bounded lifetime - 24 hours or more. When fully implemen
 will also implement `PKCE <#pkce>`__ with long-lived refresh tokens and short lived access tokens.
 This can enable delegation to untrusted computing environments, such as the Grid - realizing a
 complete implementation of SciTokens.
+
+.. note:: We do not anticipate taking a capability-only approach to authorization, with no
+          identity provided at all. This differs slightly from the SciTokens approach, which
+          prefers detailed, path-based capabilities and provides identity solely for
+          informational purposes.
 
 
 Identity tokens - OpenID Connect
