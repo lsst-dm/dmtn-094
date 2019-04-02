@@ -35,7 +35,7 @@ We define users and groups within this document, as well as minimal requirements
 as needed by the LSP, and likely the broader Data Management System.
 
 .. note:: Further definition of the IAM system will be available in the future in a change
-controlled document.
+          controlled document.
 
 User
 ----
@@ -160,8 +160,9 @@ for LSP services are handled through the OAuth 2.0 Protocol by the IAM system. N
 through the OpenID Connect layer.
 
 .. note:: Authentication for a `shared account <#shared-accounts>`__ is out of scope for this
-document. It's assumed that users may be members of groups that are owned by shared accounts,
-but they will always authenticate as themselves. These details are subject to change.
+          document. It's assumed that users may be members of groups that are owned by shared
+          accounts, but they will always authenticate as themselves. These details are subject to
+          change.
 
 .. note:: Authentication using means such as kerberos is out of scope of this document.
 
@@ -817,7 +818,7 @@ new token, with the same claims, during *initial login*. The lifetime of this to
 the lifetime of the refresh token received from CILogon, which is set at 24 hours.
 
 .. note:: This implies the maximum length for an authenticated login session for the LSP, in the
-browser, is also set at 24 hours.
+          browser, is also set at 24 hours.
 
 The token proxy also guarantees that the tokens will be usable for the duration of serviced API
 request. To accomplish this, the token proxy MUST issue a new token for every serviced API
