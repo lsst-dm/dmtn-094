@@ -469,11 +469,11 @@ Portal
 
 When a user first logs into the portal, the `token proxy <#token-proxy>`__ will intercept the login
 and redirect them to CILogon. They may select either NCSA as their Identity Provider or an
-associated external identity. CILogon executes the login, ultimately returning information about
-who the user is at NCSA to the token proxy through CILogon's OpenID Connect interface, and an
-identity token with the proper `identity token claims <#identity-token-claims>`__. The token
-proxy, through the `token issuer <#token-issuer>`__ component, will then reissue the token with
-the same claims but with a 24-hour lifetime.
+associated external federated identity. CILogon executes the login, ultimately returning
+information about who the user is at NCSA to the token proxy through CILogon's OpenID Connect
+interface, and an identity token with the proper `identity token claims
+<#identity-token-claims>`__. The token proxy, through the `token issuer <#token-issuer>`__
+component, will then reissue the token with the same claims but with a 24-hour lifetime.
 
 The portal will have access to that token, and setup it's own user session based on the information
 in the token, and may setup per-user clients, configured with that token, for future execution of
