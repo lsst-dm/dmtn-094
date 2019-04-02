@@ -596,8 +596,8 @@ such as the preferred identity email, LSST username, and LSST UNIX UID.
 * ``X-Auth-Request-Uid: [uid]``
 
 .. note:: Downstream services may need to rely on some form of header renaming, renaming headers
-          to a variety of values, if the service is unable to accept the default headers. This is
-          usually accomplished via reverse proxy configuration in some form.
+          if the service is unable to accept the default headers. This is usually accomplished
+          via reverse proxy configuration.
 
 Sequence Diagrams
 =================
