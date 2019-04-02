@@ -369,12 +369,16 @@ Broadly speaking, there are two main types of tokens in the LSST DM system. Toke
 are for identity, which are similar to those issued from CILogon, and tokens whose primary use are
 for checking capabilities. Identity tokens are roughly equivalent to X.509 certificates; they
 include information about the user identity, including the username for the LSST account and/or
-the UNIX UID, and group memberships, in addition to a cryptographic signature for verifying the
-token integrity using public key encryption.
+and group memberships, in addition to a cryptographic signature for verifying the
+token integrity using public key encryption. Because of these similarities, they can be used in
+nearly all use cases covered by X.509 certificates. From there, the similarities end. Identity
+tokens allow encoding of much more authentication information about a subject which are useful
+is useful LSST system. More information can be found about those differences in the `Tokens vs. X
+.509 <#tokens-vs--X-509>`__ section.
 
-Capability tokens, in the LSST DM system, will minimally also include the UNIX UID and/or username
-for the LSST account, as well as a list of capabilities for the token. Those capabilities are
-listed in the ``scope`` claim of a the token.
+Capability tokens, expand in the LSST DM system, will minimally also include the UNIX UID and/or
+username for the LSST account, as well as a list of capabilities for the token. Those
+capabilities are listed in the ``scope`` claim of a the token.
 
 Approaches to Authorization
 ---------------------------
@@ -456,7 +460,12 @@ complicated setup of servers, clients, and applications.
 
 OAuth tokens are handled in Layer 7 of the OSI model, which adds flexibility to configuration.
 
-OAuth tokens can include additional claims that are useful for application developers.
+OAuth JWT tokens can include additional claims that are useful for application developers. OAuth
+Identity tokens can include arbitrary pieces of data, such as the UNIX UID, UNIX GIDs of the group
+membership, and additional data about an `external identities
+<#federated-identity-and-lsst-accounts>`__ used during login. They can be short lived, limited in
+scope, and thanks to OpenID Connect and the `JWK <https://tools.ietf.org/html/rfc7517>`__ spec,
+they do not require complex certificate handling.
 
 Capabilities-based tokens allow issuance of tokens scoped accordingly to the services that a given
 application may require. A user may select only the capabilities needed for given use case, limiting
