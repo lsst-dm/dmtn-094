@@ -18,8 +18,8 @@ interactive users who are primarily interacting with the LSP in the following wa
 
 For the users in question, we make a few assumptions about use of the LSP in this context:
 
--  Users include LSST staff, and scientists that are members of science collaborations.
--  Users already have an NCSA account through some mechanism. If they wish use federated
+-  Users include LSST staff and scientists that are members of science collaborations.
+-  Users already have an NCSA/LSST account through some mechanism. If they wish to use federated
    credentials, the assumption is that their federated credentials have been associated with their
    NCSA account.
 -  Users are active, continuously or intermittently, over the course of an extended work day.
@@ -40,14 +40,14 @@ as needed by the LSP, and likely the broader Data Management System.
 User
 ----
 
-A user is minimally identified by either a UNIX ID number (UID) and a user name. A service MUST be
+A user is minimally identified by either a UNIX ID number (UID) or a user name. A service MUST be
 able to lookup a UID if it has a user name, or a user name if it has a UID.
 
 Real Accounts
 ~~~~~~~~~~~~~
 
 A user account identifying a specific person is a *real account*. All LSST users in the US and
-Chilean DACs have an LSST account. An LSST account is also the same account as an NCSA UNIX account.
+Chilean DACs have an LSST account. An LSST account is also the same account as an NCSA UNIX (Kerberos) account.
 
 Shared Accounts
 ~~~~~~~~~~~~~~~
@@ -68,8 +68,8 @@ A shared account might be created for a few *limited* use cases. This might incl
 
 -  Science Collaborations
 -  Data Releases
--  Projects; such as Stack Club
--  Teams; such as Alerts, DAX, SQuaRE
+-  Projects, such as Stack Club
+-  Teams, such as Alerts, DAX, SQuaRE
 
 Groups
 ------
@@ -101,8 +101,8 @@ Additional services for querying group membership MAY be implemented.
 User and Groups Synchronization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When necessary, the IAM system SHOULD create users and groups in underlying systems; synchronizing
-membership accordingly. The synchronization SHOULD finish in under an hour, and MUST finish within 24
+When necessary, the IAM system SHOULD create users and groups in underlying systems, synchronizing
+membership accordingly. The synchronization SHOULD finish in under an hour and MUST finish within 24
 hours.
 
 In databases, groups should be represented as roles.
@@ -139,14 +139,14 @@ Roles
 .. note:: This section is informational
 
 There's currently no concept of roles in the existing IAM system for NCSA. A system that represents
-roles must also have permissions associated with roles. As such, Roles and are generally out of
+roles must also have permissions associated with roles. As such, Roles are generally out of
 scope for this document, but they are mentioned for informational purposes.
 
-It's possible that roles may be implemented group membership. For example, the portal web
+Roles often are implemented as group membership. For example, the portal web
 application may rely on having the groups ``lsst_int_portal_usdac_user``,
 ``lsst_int_portal_pdac_user``, and ``lsst_int_portal_admin`` defined. In this example, these groups
 are effectively roles. The portal application can limit what a user can do based on membership
-in these groups. The portal may also  manage the roles in a user session context; a user may be
+in these groups. The portal may also  manage the roles in a user session context: a user may be
 allowed to be an admin by being a member of the admin group, but the user may assume the user role
 by default, with forced re-authentication being necessary to assume the admin role.
 
@@ -156,7 +156,7 @@ Authentication
 Authentication in LSST is the act of associating a user with their LSST account.
 
 Authentication by a `real user <#real-accounts>`__ is handled by the IAM system. All authentication
-for LSP services are handled through the OAuth 2.0 Protocol by the IAM system. Normally this will be
+for LSP services is handled through the OAuth 2.0 Protocol by the IAM system. Normally this will be
 through the OpenID Connect layer.
 
 .. note:: Authentication for a `shared account <#shared-accounts>`__ is out of scope for this
@@ -164,7 +164,7 @@ through the OpenID Connect layer.
           accounts, but they will always authenticate as themselves. These details are subject to
           change.
 
-.. note:: Authentication using means such as kerberos is out of scope of this document.
+.. note:: Authentication using means such as Kerberos is out of scope of this document.
 
 .. _identitylsstorg---account-management:
 
@@ -172,7 +172,7 @@ identity.lsst.org - Account Management
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All accounts can be managed through `identity.lsst.org <https://identity.lsst.org>`__. This will
-include profile information about the user, as well as group management. Users may need to interact
+include profile information about the user as well as group management. Users may need to interact
 with an LSST administrator in order to be granted the ability to create groups. This can be done by
 emailing ``lsst-account _at_ ncsa.illinois.edu`` (and CC ``lsst-sysadmins _at_ lsst.org``).
 
@@ -180,12 +180,12 @@ Federated Identity and LSST Accounts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to improve security and convenience for users, users may associate eligible accounts with
-their LSST account, enabling them to delegate to third parties authenticators. This associaton is
+their LSST account, enabling them to delegate to third-party authenticators. This association is
 called `Federated Identity <https://confluence.lsstcorp.org/display/LAAIM/Federated+Identity>`__,
-which allows you to authenticate to LSST services using the associated accounts.
+which allows the user to authenticate to LSST services using the associated accounts.
 `CILogon <#cilogon>`__ is used to determine eligible authenticators for federated identity; the list
 typically includes accounts from the `InCommon federation <#incommon-federation>`__, as well as
-OAuth accounts from services such as Google and Github. Association of accounts from third party
+OAuth accounts from services such as Google and GitHub. Association of accounts from third party
 authenticators to the user's LSST account is configured through the
 `identity.lsst.org <https://identity.lsst.org>`__ account management portal. Once an account is
 associated, a user can login using credentials and authentication services from their associated
@@ -193,7 +193,7 @@ accounts.
 
 After a successful federated authentication from the associated account, the CILogon service MUST
 produce the equivalent authentication information to that of a successful authentication of an LSST
-account.
+account via the NCSA identity provider.
 
 Authorization Methods
 ---------------------
@@ -217,7 +217,7 @@ Data Access Authorization
 
 Low-Level systems SHOULD be relied upon to authorize access to data. This includes:
 
--  Disk Storage, such as NFS, GPFS;
+-  Disk storage, such as NFS, GPFS;
 -  Databases, such as Oracle or Qserv
 
 Capabilities-based Authorization
@@ -366,19 +366,19 @@ Tokens
 ======
 
 Broadly speaking, there are two main types of tokens in the LSST DM system. Tokens whose primary use
-are for identity, which are similar to those issued from CILogon, and tokens whose primary use are
+is for identity, which are similar to those issued from CILogon, and tokens whose primary use is
 for checking capabilities. Identity tokens are roughly equivalent to X.509 certificates; they
 include information about the user identity, including the username for the LSST account and/or
 and group memberships, in addition to a cryptographic signature for verifying the
 token integrity using public key encryption. Because of these similarities, they can be used in
-nearly all use cases covered by X.509 certificates. From there, the similarities end. Identity
-tokens allow encoding of much more authentication information about a subject which are useful
-is useful LSST system. More information can be found about those differences in the `Tokens vs. X
+nearly all use cases covered by X.509 certificates. But identity tokens also
+allow encoding of much more authentication information about a subject, which is useful
+in the LSST system. More information can be found about the differences between tokens and certificates in the `Tokens vs. X
 .509 <#tokens-vs-x-509>`__ section.
 
-Capability tokens, expand in the LSST DM system, will minimally also include the UNIX UID and/or
+Capability tokens, as expanded in the LSST DM system, will minimally also include the UNIX UID and/or
 username for the LSST account, as well as a list of capabilities for the token. Those
-capabilities are listed in the ``scope`` claim of a the token.
+capabilities are listed in the ``scope`` claim of the token.
 
 Approaches to Authorization
 ---------------------------
@@ -395,7 +395,7 @@ on top of Approach 1, and as a result, gradually implemented.
 Approach 2, when initially implemented, will rely on JWT tokens in the form of SciTokens access
 tokens, with a long but bounded lifetime - 24 hours or more. When fully implemented, Approach 2
 will also implement `PKCE <#pkce>`__ with long-lived refresh tokens and short lived access tokens.
-This can enable delegation to untrusted computing environments, such as the Grid - realizing a
+This can enable delegation to untrusted computing environments, such as the Grid — realizing a
 complete implementation of SciTokens.
 
 .. note:: We do not anticipate taking a capability-only approach to authorization, with no
@@ -409,7 +409,7 @@ Identity tokens - OpenID Connect
 
 All identity tokens are in the form of OpenID Connect tokens. All OpenID connect tokens are `JWT
 <#jwt>`__ tokens. They are issued from `CILogon <#cilogon>`__ in the exchange. In `Approach
-1 <#approaches-to-authorization>`__, we only use claims from tokens issues by CILogon. Tokens may
+1 <#approaches-to-authorization>`__, we only use claims from tokens issued by CILogon. Tokens may
 be reissued by the `token issuer <#token-issuer>`__ to satisfy the `token acceptance
 guarantee <#token-acceptance-guarantee>`__, but all claims are equal to the CILogon claims.
 
@@ -424,7 +424,7 @@ Minimally, the identity tokens issued by CILogon MUST include the following clai
 :``uidNumber``: The LSST UNIX UID.
 
 :``isMemberOf``: A list of JSON Objects with the objects composed
-    of a ``name`` key corresponding to UNIX group names; and  ``id`` key corresponding to the UNIX
+    of a ``name`` key corresponding to UNIX group names and  ``id`` key corresponding to the UNIX
     GID for the group name.
 
 
@@ -468,7 +468,7 @@ scope, and thanks to OpenID Connect and the `JWK <https://tools.ietf.org/html/rf
 they do not require complex certificate handling.
 
 Capabilities-based tokens allow issuance of tokens scoped accordingly to the services that a given
-application may require. A user may select only the capabilities needed for given use case, limiting
+application may require. A user may select only the capabilities needed for a given use case, limiting
 access to sensitive information, such as `query history <#data-and-service-classifications>`__. This
 is most important in lower trust environments, such as grid computing or shared university clusters.
 
@@ -485,7 +485,7 @@ When a user first logs into the portal, the `token proxy <#token-proxy>`__ will 
 and redirect them to CILogon. They may select either NCSA as their Identity Provider or an
 associated external federated identity. CILogon executes the login, ultimately returning
 information about who the user is at NCSA to the token proxy through CILogon's OpenID Connect
-interface, and an identity token with the proper `identity token claims
+interface as well as an identity token with the proper `identity token claims
 <#identity-token-claims>`__. The token proxy, through the `token issuer <#token-issuer>`__
 component, will then reissue the token with the same claims but with a 24-hour lifetime.
 
@@ -507,14 +507,13 @@ The portal and the notebook will share the same login flow, both being behind th
 notebook will initiate a notebook session based on the token that it has received. The notebook
 can then make the token available in the user's notebook environment.
 
-Once a user is logged in to the notebook aspect, with the token in the user's environment, a user
-in the notebook aspect can be viewed as a special case of `data access libraries
-<#data-access-libraries>`__, where we have some access to the user's local environment, so we can
-bootstrap an authentication mechanism on behalf of the user which ensures any
-necessary tokens are implicitly available in the user's environment. For software developed by
-LSST that utilizes the LSP API aspect services, such as the Butler, we will ensure those
-applications can be automatically configured based on some form of information in the user's
-Notebook environment. Other third party software may be automatically configured, otherwise they
+A user logged in to the notebook aspect
+can be viewed as a special case of `data access libraries
+<#data-access-libraries>`__, where we can inject tokens into the user's local environment.
+For software developed by
+LSST that utilizes the LSP API aspect services, we will ensure those
+applications can be automatically configured based on those tokens.
+Other third party software may be able to be similarly automatically configured; otherwise they
 will be configurable in the same way as if a user was running on their local machine and not in an
 LSP instance.
 
@@ -529,12 +528,12 @@ desirable to switch to the `PKCE <#pkce>`__ flow with refresh tokens.
 Data access libraries
 ~~~~~~~~~~~~~~~~~~~~~
 
-We are targeting Astroquery an PyVO as primary libraries to be used within the Notebook environment.
+We are targeting Astroquery and PyVO as primary libraries to be used within the Notebook environment.
 PyVO doesn't currently implement any form of authentication, though we've prototyped and tested a
 few strategies for adding it.
 
-Within the Notebook aspect, tokens MUST be available, either in an well-defined environment
-variables or as a file in a locations.
+Within the Notebook aspect, tokens MUST be available, either in a well-defined environment
+variable or as a file in a well-defined location.
 
 
 Token Manager
@@ -565,7 +564,7 @@ With the PKCE flow, the refresh token can be presented at any time to the token 
 short-lived capability token.
 
 The token issuer implements a token download interface. Minimally, the token download interface
-allows a user to select the capabilities a token should be configured with and download the token.
+allows a user to select the capabilities a token should be configured with and to download the token.
 
 Token Authorization
 -------------------
@@ -594,20 +593,20 @@ The reissued token MAY alter the values of the following ``iss``, ``exp``, and `
 other claims MUST be included in the reissued token, unmodified. Additional claims may also be
 included.
 
-When reissuing tokens, the token proxy MUST make those headers available to the downstream
-services via HTTP headers.
+When reissuing tokens, the token proxy MUST make those tokens available to the downstream
+services via HTTP headers:
 
 * ``X-Auth-Request-Token: [token]``
 * ``Authorization: Bearer [token]``
 
 Additional information about the user may also be relayed to the services from the token proxy,
-such as the preferred identity email, LSST username, and LSST UNIX UID.
+such as the preferred identity email, LSST username, and LSST UNIX UID:
 
 * ``X-Auth-Request-Email: [email]``
 * ``X-Auth-Request-User: [username]``
 * ``X-Auth-Request-Uid: [uid]``
 
-.. note:: Downstream services may need to rely on some form of header renaming, renaming headers
+.. note:: Downstream services may need to rely on some form of header renaming
           if the service is unable to accept the default headers. This is usually accomplished
           via reverse proxy configuration.
 
@@ -662,10 +661,10 @@ Appendix
 
 -  `InCommon <#incommon-federation>`__ and eduPerson to verify attributes about scientists, when
    possible;
--  `CILogon <#cilogon>`__ to federate those identities and implement return identity data about
+-  `CILogon <#cilogon>`__ to federate those identities and implement the return of identity data about
    users in the form of *claims*.
 -  `OAuth 2.0 <#oauth-2.0>`__ as the generic protocol to interface with CILogon. OpenID Connect is
-   layered over the OAuth 2.0 protocol to required for an authentication implementation.
+   layered over the OAuth 2.0 protocol to enable an authentication implementation.
 -  `OpenID Connect <#openid-connect>`__ as the simple authentication layer on top of OAuth 2.0.
 -  `JWT <#jwt>`__ as the implementation for identity tokens. This is also required as a result of
    using OpenID Connect.
@@ -685,8 +684,8 @@ OAuth 2.0
 
 OAuth2 is a framework that enables users to authorize applications to retrieve information, either
 in the form of a token or through the use of a token, about the user from an identity provider. An
-identity provider may be Google, Github or an institution. Typically, institutions themselves do not
-implement OAuth 2.0 interfaces, but do implement interfaces with Shibboleth and SAML.
+identity provider may be Google, GitHub, or an institution. Typically, institutions themselves do not
+implement OAuth 2.0 interfaces, but they do implement interfaces with Shibboleth and SAML.
 
 OAuth 2.0 specifies how you may ask for information about a user. It also specifies a method,
 through tokens, which a service may use to request and validate information about the user. OAuth
@@ -707,12 +706,12 @@ an OpenID Connect Identity token or a SciToken.
 
 In some cases, existing clients of LSP services may exist that may not allow a user to send an
 arbitrary authorization header, or would need code to do so. Clients that support
-authorization can be configured to either provide an interface for `HTTP Basic
+authorization can often be configured to provide an interface for `HTTP Basic
 Authorization <https://tools.ietf.org/html/rfc7617>`__.
 
 For compatibility with such systems, some services in the LSP, most importantly the WebDAV service,
-MAY accept tokens in the Authorization header according to HTTP Basic scheme, where the token is the
-username and the password is ``x-oauth-basic``, or empty.
+MAY accept tokens in the Authorization header according to the HTTP Basic scheme, where the token is the
+username and the password is ``x-oauth-basic`` or empty, or vice versa.
 
 .. seealso:: https://tools.ietf.org/html/rfc7617#section-2
 .. seealso:: https://github.blog/2012-09-21-easier-builds-and-deployments-using-git-over-https-and-oauth/
@@ -729,7 +728,7 @@ compatibility may be possible by manually constructing the URL with the token in
 OpenID Connect
 --------------
 
-OpenID Connect is an simple authentication layer on top of OAuth2. OpenID Connect specifies a small
+OpenID Connect is a simple authentication layer on top of OAuth2. OpenID Connect specifies a small
 set of information about a user which may be used to authenticate a user using claims implemented
 according to the OAuth 2.0 specification.
 
@@ -738,9 +737,9 @@ CILogon
 
 CILogon is a generic authentication proxy/clearing house for authentication providers from multiple
 services or institutions, especially institutions federated into the InCommon federation, as well as
-other services such as Github and Google. CILogon serves as a common endpoint for these various
+other services such as GitHub and Google. CILogon serves as a common endpoint for these various
 identity providers and translates their authentication mechanisms (OAuth 2.0, Shibboleth, OpenID
-Connect) mechanisms to a common authentication mechanism, often while also translating claims, when
+Connect) to a common authentication mechanism while also translating claims when
 possible.
 
 CILogon translates authentication information and user claims into OpenID Connect claims, layered on
@@ -748,27 +747,27 @@ the OAuth 2.0 protocol. Using this, we typically know what institution a user is
 address, and whether or not they are faculty, staff, or a student. We may use this information to
 also map them to an NCSA user, provided that information has been previously captured, and
 potentially retrieve additional claims about that user, such as the `groups <#groups>`__ they are a
-member of. Should we want additional claims beyond the subject of a token - claims such as group
-membership or capabilities, we will need to deploy a server which we can present a refresh token to
+member of. Should we want additional claims beyond the subject of a token — claims such as group
+membership or capabilities — we will need to deploy a server to which we can present a refresh token
 that will provide us with those additional claims. We do not expect this implementation-specific
-needs to be included in CILogon.
+server needs to be included in CILogon.
 
 JWT
 ---
 
-A JSON Web Token (JWT) is a way of representing claims to as JSON, as well as information for
+A JSON Web Token (JWT) is a way of representing claims as JSON, as well as information for
 validating those claims through the use of signatures (JWS) in the token, and a means of validating
-those signature (JWE/JWK) - all in the same token. Included in the JWT specification is also a way
+those signatures (JWE/JWK) — all in the same token. Included in the JWT specification is also a way
 of encoding a token using Base64 in a way that's friendly for the web.
 
-For all LSST Applications, we use RS256, an asymmetric algorithm, to sign the tokens.
+For all LSST applications, we use RSA256, an asymmetric algorithm, to sign the tokens.
 
 We rely on tokens generated by CILogon to authenticate users in the browser. CILogon always
 returns an OpenID Connect JWT token.
 
 A whitelist of token issuers we trust MUST be maintained, which includes CILogon and the `token
 issuer <#token-issuer>`__ for a given instance. Public keys used to validate tokens
-must be available on all token issuers, following to the JWK specification. Applications should
+must be available from all token issuers, following the JWK specification. Applications should
 cache the JWK for a given token issuer for at least 5 minutes and not more than 1 hour.
 
 All Access Tokens are based on JWT. Some access tokens may also include claims implemented
@@ -789,7 +788,7 @@ SciTokens
 
 SciTokens is an implementation of `capabilities-based
 authorizations <#capabilities-based-authorization>`__ built as specific claims inside a JWT token.
-Those claims are modeled as lists of capabilities; organized as colon-separated pairs of operations;
+Those claims are modeled as lists of capabilities organized as colon-separated pairs of operations,
 such as ``read``, ``write``, or ``execute``, with arbitrary named resources. A named resource may be
 a file path (e.g. ``read:/datasets/catalogs``) or a more general resource (e.g.
 ``read:mysql://server:3806/schema``)
@@ -805,7 +804,7 @@ capabilities. This is defined in `RFC6749 <https://tools.ietf.org/html/rfc6749#s
 
 In accordance with the principle of least-privilege, a SciTokens issuer SHOULD also allow a user to
 attenuate or remove those capabilities with successive calls to the SciTokens issuer, trading an
-existing token for attenuated one. This may be especially useful with Grid computing, for example.
+existing token for a more-attenuated one. This may be especially useful with Grid computing, for example.
 It's important to consider the lifetime of a token in these scenarios to determine what token may be
 required.
 
@@ -813,12 +812,10 @@ Token lifetimes
 ---------------
 
 Access token lifetimes are expected to be short, typically on the order of several hours or less,
-but may last as long as 24 hours, depending on the issuer and use case. An exact number is not
-available.
+but may last as long as 24 hours, depending on the issuer and use case.
 
-Refresh tokens, which are used to acquire access tokens in the OAuth 2.0 protocol, can last longer.
-It's expected a refresh token will last at least 24 hours and may last as long as a week. In some
-limited use cases, they may last longer.
+Refresh tokens, which are used to acquire access tokens in the OAuth 2.0 protocol, can last longer than those access tokens.
+It's expected a refresh token will last at least 24 hours and may in some cases last a week or longer.
 
 Token Acceptance Guarantee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -831,7 +828,7 @@ the lifetime of the refresh token received from CILogon, which is set at 24 hour
 .. note:: This implies the maximum length for an authenticated login session for the LSP, in the
           browser, is also set at 24 hours.
 
-The token proxy also guarantees that the tokens will be usable for the duration of serviced API
+The token proxy also guarantees that the tokens will be usable for the duration of a serviced API
 request. To accomplish this, the token proxy MUST issue a new token for every serviced API
 request, with only the API aspect as the intended audience. The lifetime of this token is the
 upper bound for the limit of time it takes to service an API request, set at 24 hours.
