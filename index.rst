@@ -631,41 +631,35 @@ Approach 1 - Identity Tokens
 Notebook with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_OpenID_Connect.png
-   :target: ./_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_OpenID_Connect.png
+.. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow.png
+   :target: ./_static/Authentication_to_Notebook_with_CILogon_OAuth_flow.png
 
 Portal with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/Authentication_for_Portal_with_data_request_using_CILogon_and_OpenID_Connect.png
-   :target: ./_static/Authentication_for_Portal_with_data_request_using_CILogon_and_OpenID_Connect.png
-
-Application with Identity Tokens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. figure:: /_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
-   :target: ../../_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
+.. figure:: /_static/Authentication_to_Portal_with_CILogon_OAuth_flow.png
+   :target: ./_static/Authentication_to_Portal_with_CILogon_OAuth_flow.png
 
 Approach 2 - Capability Tokens
 ---------------------------
 
-Notebook with Capability Token
+Application via Token Download
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_and_Capability_token.png
-   :target: ./_static/Authentication_to_Notebook_with_CILogon_OAuth_flow_and_Capability_token.png
+.. figure:: /_static/Authentication_for_Application_with_data_request_via_token_download.png
+   :target: ./_static/Authentication_for_Application_with_data_request_via_token_download.png
 
-Portal with Capability Token
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Application via PKCE Flow
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/Authentication_to_Portal_with_data_request_using_capability_token.png
-   :target: ./_static/Authentication_to_Portal_with_data_request_using_capability_token.png
+.. figure:: /_static/Authentication_for_Application_with_data_request_with_PKCE_flow.png
+   :target: ./_static/Authentication_for_Application_with_data_request_with_PKCE_flow.png
 
-Application with Capability Token
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Application expired access and refresh tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/Authentication_for_Application_with_data_request_using_capability_token.png
-   :target: ./_static/Authentication_for_Application_with_data_request_using_capability_token.png
+.. figure:: /_static/Authentication_for_Application_with_expired_access_token_and_valid_refresh_token.png
+   :target: ./_static/Authentication_for_Application_with_expired_access_token_and_valid_refresh_token.png
 
 
 Appendix
