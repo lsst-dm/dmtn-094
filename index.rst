@@ -572,8 +572,8 @@ The token issuer will handle several use cases:
 2. Token reissuance to satisfy the `token acceptance guarantee <#token-acceptance-guarantee>`__
 3. Token issuance, by way of the token download interface, of capability tokens from Approach 2.
 4. Token issuance, by way of PKCE flow, of refresh tokens and capability tokens from Approach 2.
-With the PKCE flow, the refresh token can be presented at any time to the token issuer to issue a
-short-lived capability token.
+   With the PKCE flow, the refresh token can be presented at any time to the token issuer to issue a
+   short-lived capability token.
 
 The token issuer implements a token download interface. Minimally, the token download interface
 allows a user to select the capabilities a token should be configured with and to download the token.
@@ -626,7 +626,7 @@ Sequence Diagrams
 =================
 
 Approach 1 - Identity Tokens
--------------------------
+----------------------------
 
 Notebook with Identity Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -647,7 +647,7 @@ Application with Identity Tokens
    :target: ../../_static/Authentication_for_Application_with_data_request_using_CILogon_and_OpenID_Connect.png
 
 Approach 2 - Capability Tokens
----------------------------
+------------------------------
 
 Notebook with Capability Token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
